@@ -1,11 +1,12 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Download, Github, Lightbulb, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Download, Github, Lightbulb, FileText, Bot } from "lucide-react";
+import ElizaPlugin from "@/components/ElizaPlugin";
 
 interface PubMedResult {
   pmid: string;
@@ -188,158 +189,178 @@ const Index = () => {
           </p>
         </div>
 
-        {/* Search Section */}
-        <Card className="mb-8 border-blue-200 shadow-lg">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-blue-900">
-              <Search className="w-5 h-5" />
-              Search Scientific Papers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-4">
-              <Input
-                placeholder="Enter biomedical terms (e.g., TP53 AND lung cancer)"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && searchPubMed()}
-                className="flex-1"
-              />
-              <Button 
-                onClick={searchPubMed} 
-                disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {isLoading ? "Searching..." : "Search PubMed"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Main Content Tabs */}
+        <Tabs defaultValue="search" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
+            <TabsTrigger value="search" className="flex items-center gap-2">
+              <Search className="w-4 h-4" />
+              Paper Search
+            </TabsTrigger>
+            <TabsTrigger value="eliza" className="flex items-center gap-2">
+              <Bot className="w-4 h-4" />
+              Eliza AI Assistant
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Results Section */}
-        {(results.length > 0 || isLoading) && (
-          <div className="grid lg:grid-cols-2 gap-8">
-            {/* Papers List */}
-            <div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">Search Results</h3>
-              <div className="space-y-4">
-                {isLoading && !results.length ? (
-                  Array.from({ length: 2 }).map((_, i) => (
-                    <Card key={i} className="border-gray-200">
-                      <CardContent className="p-6">
-                        <Skeleton className="h-6 w-3/4 mb-3" />
-                        <Skeleton className="h-4 w-full mb-2" />
-                        <Skeleton className="h-4 w-5/6 mb-3" />
-                        <Skeleton className="h-8 w-32" />
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  results.map((paper) => (
-                    <Card 
-                      key={paper.pmid} 
-                      className={`border-gray-200 cursor-pointer transition-all hover:shadow-md ${
-                        selectedPaper?.pmid === paper.pmid ? 'ring-2 ring-blue-500 border-blue-300' : ''
-                      }`}
-                      onClick={() => analyzeWithAI(paper)}
-                    >
-                      <CardContent className="p-6">
-                        <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                          {paper.title}
-                        </h4>
-                        <p className="text-sm text-gray-600 mb-3">
-                          {paper.authors} • {paper.journal} ({paper.year})
-                        </p>
-                        <p className="text-sm text-gray-700 mb-4 line-clamp-3">
-                          {paper.abstract}
-                        </p>
-                        <Button size="sm" className="bg-teal-600 hover:bg-teal-700">
-                          <Lightbulb className="w-4 h-4 mr-2" />
-                          Analyze with AI
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </div>
+          <TabsContent value="search">
+            {/* Search Section */}
+            <Card className="mb-8 border-blue-200 shadow-lg">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-900">
+                  <Search className="w-5 h-5" />
+                  Search Scientific Papers
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-4">
+                  <Input
+                    placeholder="Enter biomedical terms (e.g., TP53 AND lung cancer)"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && searchPubMed()}
+                    className="flex-1"
+                  />
+                  <Button 
+                    onClick={searchPubMed} 
+                    disabled={isLoading}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {isLoading ? "Searching..." : "Search PubMed"}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-            {/* AI Analysis */}
-            <div>
-              <h3 className="text-2xl font-semibold text-gray-900 mb-4">AI Analysis</h3>
-              {selectedPaper && (
-                <Card className="border-teal-200 bg-teal-50/50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-teal-900">
-                      <FileText className="w-5 h-5" />
-                      {selectedPaper.title}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {isLoading && !aiAnalysis ? (
-                      <div className="space-y-4">
-                        <Skeleton className="h-4 w-full" />
-                        <Skeleton className="h-4 w-5/6" />
-                        <Skeleton className="h-4 w-4/5" />
-                        <Skeleton className="h-20 w-full" />
-                      </div>
-                    ) : aiAnalysis ? (
-                      <div className="space-y-6">
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">AI Summary</h4>
-                          <p className="text-gray-700 bg-white p-4 rounded-lg border">
-                            {aiAnalysis.summary}
-                          </p>
-                        </div>
-                        
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Generated Hypothesis</h4>
-                          <p className="text-gray-700 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                            {aiAnalysis.hypothesis}
-                          </p>
-                        </div>
-
-                        <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">Key Findings</h4>
-                          <ul className="space-y-2">
-                            {aiAnalysis.keyFindings.map((finding, index) => (
-                              <li key={index} className="flex items-start gap-2">
-                                <div className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0" />
-                                <span className="text-gray-700">{finding}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <Button onClick={exportSummary} className="w-full bg-green-600 hover:bg-green-700">
-                          <Download className="w-4 h-4 mr-2" />
-                          Export Analysis
-                        </Button>
-                      </div>
+            {/* Results Section */}
+            {(results.length > 0 || isLoading) && (
+              <div className="grid lg:grid-cols-2 gap-8">
+                {/* Papers List */}
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-900 mb-4">Search Results</h3>
+                  <div className="space-y-4">
+                    {isLoading && !results.length ? (
+                      Array.from({ length: 2 }).map((_, i) => (
+                        <Card key={i} className="border-gray-200">
+                          <CardContent className="p-6">
+                            <Skeleton className="h-6 w-3/4 mb-3" />
+                            <Skeleton className="h-4 w-full mb-2" />
+                            <Skeleton className="h-4 w-5/6 mb-3" />
+                            <Skeleton className="h-8 w-32" />
+                          </CardContent>
+                        </Card>
+                      ))
                     ) : (
-                      <p className="text-gray-500 text-center py-8">
-                        Select a paper to analyze with AI
-                      </p>
+                      results.map((paper) => (
+                        <Card 
+                          key={paper.pmid} 
+                          className={`border-gray-200 cursor-pointer transition-all hover:shadow-md ${
+                            selectedPaper?.pmid === paper.pmid ? 'ring-2 ring-blue-500 border-blue-300' : ''
+                          }`}
+                          onClick={() => analyzeWithAI(paper)}
+                        >
+                          <CardContent className="p-6">
+                            <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                              {paper.title}
+                            </h4>
+                            <p className="text-sm text-gray-600 mb-3">
+                              {paper.authors} • {paper.journal} ({paper.year})
+                            </p>
+                            <p className="text-sm text-gray-700 mb-4 line-clamp-3">
+                              {paper.abstract}
+                            </p>
+                            <Button size="sm" className="bg-teal-600 hover:bg-teal-700">
+                              <Lightbulb className="w-4 h-4 mr-2" />
+                              Analyze with AI
+                            </Button>
+                          </CardContent>
+                        </Card>
+                      ))
                     )}
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
-        )}
+                  </div>
+                </div>
 
-        {/* Empty State */}
-        {!isLoading && results.length === 0 && (
-          <div className="text-center py-12">
-            <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              Search biomedical literature
-            </h3>
-            <p className="text-gray-500 max-w-md mx-auto">
-              Enter keywords like "TP53 AND lung cancer" to find relevant research papers and generate AI-powered insights.
-            </p>
-          </div>
-        )}
+                {/* AI Analysis */}
+                <div>
+                  <h3 className="text-2xl font-semibold text-gray-900 mb-4">AI Analysis</h3>
+                  {selectedPaper && (
+                    <Card className="border-teal-200 bg-teal-50/50">
+                      <CardHeader>
+                        <CardTitle className="flex items-center gap-2 text-teal-900">
+                          <FileText className="w-5 h-5" />
+                          {selectedPaper.title}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {isLoading && !aiAnalysis ? (
+                          <div className="space-y-4">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-5/6" />
+                            <Skeleton className="h-4 w-4/5" />
+                            <Skeleton className="h-20 w-full" />
+                          </div>
+                        ) : aiAnalysis ? (
+                          <div className="space-y-6">
+                            <div>
+                              <h4 className="font-semibold text-gray-900 mb-2">AI Summary</h4>
+                              <p className="text-gray-700 bg-white p-4 rounded-lg border">
+                                {aiAnalysis.summary}
+                              </p>
+                            </div>
+                            
+                            <div>
+                              <h4 className="font-semibold text-gray-900 mb-2">Generated Hypothesis</h4>
+                              <p className="text-gray-700 bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                {aiAnalysis.hypothesis}
+                              </p>
+                            </div>
+
+                            <div>
+                              <h4 className="font-semibold text-gray-900 mb-2">Key Findings</h4>
+                              <ul className="space-y-2">
+                                {aiAnalysis.keyFindings.map((finding, index) => (
+                                  <li key={index} className="flex items-start gap-2">
+                                    <div className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0" />
+                                    <span className="text-gray-700">{finding}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            <Button onClick={exportSummary} className="w-full bg-green-600 hover:bg-green-700">
+                              <Download className="w-4 h-4 mr-2" />
+                              Export Analysis
+                            </Button>
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 text-center py-8">
+                            Select a paper to analyze with AI
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!isLoading && results.length === 0 && (
+              <div className="text-center py-12">
+                <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                  Search biomedical literature
+                </h3>
+                <p className="text-gray-500 max-w-md mx-auto">
+                  Enter keywords like "TP53 AND lung cancer" to find relevant research papers and generate AI-powered insights.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="eliza">
+            <ElizaPlugin />
+          </TabsContent>
+        </Tabs>
 
         {/* Footer Note */}
         <div className="mt-16 text-center">
