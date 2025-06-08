@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Download, Github, Lightbulb, FileText, Bot } from "lucide-react";
+import { Search, Download, Github, Lightbulb, FileText, Bot, Settings } from "lucide-react";
 import ElizaPlugin from "@/components/ElizaPlugin";
+import ApiConfig from "@/components/ApiConfig";
 
 interface PubMedResult {
   pmid: string;
@@ -191,7 +192,7 @@ const Index = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="search" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Search className="w-4 h-4" />
               Paper Search
@@ -199,6 +200,10 @@ const Index = () => {
             <TabsTrigger value="eliza" className="flex items-center gap-2">
               <Bot className="w-4 h-4" />
               Eliza AI Assistant
+            </TabsTrigger>
+            <TabsTrigger value="config" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              Configuration
             </TabsTrigger>
           </TabsList>
 
@@ -359,6 +364,10 @@ const Index = () => {
 
           <TabsContent value="eliza">
             <ElizaPlugin />
+          </TabsContent>
+
+          <TabsContent value="config">
+            <ApiConfig />
           </TabsContent>
         </Tabs>
 
