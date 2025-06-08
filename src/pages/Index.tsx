@@ -5,34 +5,48 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Download, Github, Lightbulb, FileText, Bot, Settings } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Search, Download, Github, Lightbulb, FileText, Bot, Settings, ExternalLink, BookOpen, Brain } from "lucide-react";
 import ElizaPlugin from "@/components/ElizaPlugin";
 import ApiConfig from "@/components/ApiConfig";
+import EnhancedMindMap from "@/components/EnhancedMindMap";
+import { searchCoreAPI, analyzePaperWithCore, downloadPaperPDF } from "@/utils/coreApiService";
+import { exportAnalysisToPDF } from "@/utils/pdfExport";
 
-interface PubMedResult {
-  pmid: string;
+interface CorePaper {
+  id: string;
   title: string;
   abstract: string;
-  authors: string;
+  authors: string[];
   journal: string;
   year: string;
+  doi?: string;
+  pdf_url?: string;
+  citations: number;
 }
 
-interface AIAnalysis {
+interface CoreAnalysis {
   summary: string;
-  hypothesis: string;
-  keyFindings: string[];
+  key_findings: string[];
+  methodology: string;
+  conclusions: string;
+  research_gaps: string[];
+  future_directions: string[];
+  confidence_score: number;
 }
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [results, setResults] = useState<PubMedResult[]>([]);
-  const [aiAnalysis, setAiAnalysis] = useState<AIAnalysis | null>(null);
-  const [selectedPaper, setSelectedPaper] = useState<PubMedResult | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [results, setResults] = useState<CorePaper[]>([]);
+  const [totalResults, setTotalResults] = useState(0);
+  const [coreAnalysis, setCoreAnalysis] = useState<CoreAnalysis | null>(null);
+  const [selectedPaper, setSelectedPaper] = useState<CorePaper | null>(null);
+  const [showMindMap, setShowMindMap] = useState(false);
   const { toast } = useToast();
 
-  const searchPubMed = async () => {
+  const searchLiterature = async () => {
     if (!searchTerm.trim()) {
       toast({
         title: "Search term required",
@@ -44,43 +58,23 @@ const Index = () => {
 
     setIsLoading(true);
     setResults([]);
-    setAiAnalysis(null);
+    setCoreAnalysis(null);
     setSelectedPaper(null);
+    setShowMindMap(false);
 
     try {
-      // Mock PubMed search results for demo
-      const mockResults: PubMedResult[] = [
-        {
-          pmid: "12345678",
-          title: "TP53 mutations in lung cancer: molecular mechanisms and therapeutic implications",
-          abstract: "Background: TP53 is the most frequently mutated gene in human cancers, including lung cancer. Methods: We analyzed TP53 mutations in 150 lung cancer samples using next-generation sequencing. Results: TP53 mutations were found in 60% of cases, with missense mutations being the most common. Patients with TP53 mutations showed reduced overall survival. Conclusion: TP53 mutations play a crucial role in lung cancer progression and may serve as therapeutic targets.",
-          authors: "Smith J, Johnson M, Williams K",
-          journal: "Nature Medicine",
-          year: "2023"
-        },
-        {
-          pmid: "87654321",
-          title: "Therapeutic targeting of mutant TP53 in lung adenocarcinoma",
-          abstract: "Introduction: Mutant TP53 represents a major oncogenic driver in lung adenocarcinoma. Objective: To evaluate novel therapeutic approaches targeting mutant TP53. Methods: Cell line studies and xenograft models were used. Results: Combination therapy with MDM2 inhibitors and chemotherapy showed enhanced efficacy. Conclusions: Targeting mutant TP53 pathways offers promising therapeutic opportunities.",
-          authors: "Brown A, Davis L, Miller R",
-          journal: "Cell",
-          year: "2023"
-        }
-      ];
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      setResults(mockResults);
+      const response = await searchCoreAPI(searchTerm, 10);
+      setResults(response.papers);
+      setTotalResults(response.total_results);
       
       toast({
         title: "Search completed",
-        description: `Found ${mockResults.length} relevant papers`,
+        description: `Found ${response.total_results} papers via Core API`,
       });
     } catch (error) {
       toast({
         title: "Search failed",
-        description: "Unable to fetch papers from PubMed. Please try again.",
+        description: "Unable to fetch papers from Core API. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -88,32 +82,20 @@ const Index = () => {
     }
   };
 
-  const analyzeWithAI = async (paper: PubMedResult) => {
+  const analyzeWithAI = async (paper: CorePaper) => {
     setSelectedPaper(paper);
-    setIsLoading(true);
-    setAiAnalysis(null);
+    setIsAnalyzing(true);
+    setCoreAnalysis(null);
+    setShowMindMap(false);
 
     try {
-      // Mock AI analysis for demo
-      const mockAnalysis: AIAnalysis = {
-        summary: "This study demonstrates that TP53 mutations are prevalent in lung cancer (60% of cases) and significantly impact patient survival. The research identifies missense mutations as the predominant type and establishes TP53 as both a prognostic marker and potential therapeutic target.",
-        hypothesis: "Based on this research, we hypothesize that combination therapies targeting both mutant TP53 and downstream pathways (such as MDM2 inhibitors with traditional chemotherapy) could significantly improve treatment outcomes for lung cancer patients with TP53 mutations. Further investigation into TP53-specific biomarkers may enable personalized treatment strategies.",
-        keyFindings: [
-          "TP53 mutations present in 60% of lung cancer cases",
-          "Missense mutations are the most common type",
-          "Reduced overall survival in TP53 mutant patients",
-          "Potential for targeted therapeutic interventions"
-        ]
-      };
-
-      // Simulate AI processing delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setAiAnalysis(mockAnalysis);
+      const paperContent = `Title: ${paper.title}\nAbstract: ${paper.abstract}\nAuthors: ${paper.authors.join(', ')}\nJournal: ${paper.journal} (${paper.year})`;
+      const analysis = await analyzePaperWithCore(paper.id, paperContent);
+      setCoreAnalysis(analysis);
       
       toast({
         title: "AI analysis completed",
-        description: "Generated summary and research hypothesis",
+        description: `Analysis completed with ${(analysis.confidence_score * 100).toFixed(1)}% confidence`,
       });
     } catch (error) {
       toast({
@@ -122,36 +104,67 @@ const Index = () => {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsAnalyzing(false);
     }
   };
 
-  const exportSummary = () => {
-    if (!selectedPaper || !aiAnalysis) return;
+  const generateMindMap = () => {
+    if (!selectedPaper || !coreAnalysis) return;
+    setShowMindMap(true);
+    
+    toast({
+      title: "Mind map generated",
+      description: "Interactive visualization created successfully",
+    });
+  };
+
+  const exportAnalysis = () => {
+    if (!selectedPaper || !coreAnalysis) return;
 
     const exportData = {
-      paper: selectedPaper,
-      analysis: aiAnalysis,
-      exportedAt: new Date().toISOString()
+      paper: {
+        id: selectedPaper.id,
+        title: selectedPaper.title,
+        authors: selectedPaper.authors,
+        journal: selectedPaper.journal,
+        year: selectedPaper.year,
+        abstract: selectedPaper.abstract
+      },
+      analysis: coreAnalysis,
+      mindMapData: showMindMap ? coreAnalysis : undefined
     };
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-      type: 'application/json'
-    });
-    
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `genelinker-analysis-${selectedPaper.pmid}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    exportAnalysisToPDF(exportData);
 
     toast({
-      title: "Export successful",
-      description: "Analysis saved to downloads",
+      title: "Analysis exported",
+      description: "PDF report saved to downloads",
     });
+  };
+
+  const downloadPaper = async (paper: CorePaper) => {
+    if (!paper.pdf_url) {
+      toast({
+        title: "PDF not available",
+        description: "This paper doesn't have a downloadable PDF",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      await downloadPaperPDF(paper.pdf_url, paper.title);
+      toast({
+        title: "Download started",
+        description: "Paper PDF is being downloaded",
+      });
+    } catch (error) {
+      toast({
+        title: "Download failed",
+        description: "Unable to download the paper PDF",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -165,7 +178,7 @@ const Index = () => {
                 <span className="text-white font-bold text-sm">G</span>
               </div>
               <h1 className="text-xl font-bold text-gray-900">GeneLinker</h1>
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">AI-Powered</span>
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Core API Powered</span>
             </div>
             <nav className="hidden md:flex items-center space-x-6">
               <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Research Tools</a>
@@ -187,34 +200,38 @@ const Index = () => {
             AI-Powered Scientific Research Assistant
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Analyze scientific papers, discover gene relationships, and accelerate research with GPT-4 powered insights and mind map visualizations.
+            Search millions of research papers via Core API, analyze with GPT-4, generate interactive mind maps, and export comprehensive PDF reports.
           </p>
           <div className="flex justify-center gap-4 text-sm text-gray-500">
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              OpenAI GPT-4 Integration
+              Core API Integration
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-              Real-time Literature Analysis
+              GPT-4 Analysis
             </span>
             <span className="flex items-center gap-1">
               <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-              Interactive Mind Maps
+              PDF Export & Download
             </span>
           </div>
         </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="search" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Search className="w-4 h-4" />
-              Paper Search & Analysis
+              Literature Search
             </TabsTrigger>
             <TabsTrigger value="eliza" className="flex items-center gap-2">
               <Bot className="w-4 h-4" />
-              AI Research Assistant
+              AI Assistant
+            </TabsTrigger>
+            <TabsTrigger value="config" className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              API Config
             </TabsTrigger>
           </TabsList>
 
@@ -224,29 +241,35 @@ const Index = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-blue-900">
                   <Search className="w-5 h-5" />
-                  Scientific Literature Search
+                  Scientific Literature Search (Core API)
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-4">
                   <Input
-                    placeholder="Enter biomedical terms (e.g., TP53 AND lung cancer, CRISPR gene editing)"
+                    placeholder="Enter research terms (e.g., CRISPR gene editing, machine learning cancer, COVID-19 vaccines)"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && searchPubMed()}
+                    onKeyPress={(e) => e.key === 'Enter' && !isLoading && searchLiterature()}
                     className="flex-1"
+                    disabled={isLoading}
                   />
                   <Button 
-                    onClick={searchPubMed} 
+                    onClick={searchLiterature} 
                     disabled={isLoading}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
-                    {isLoading ? "Searching..." : "Search PubMed"}
+                    {isLoading ? "Searching..." : "Search Core API"}
                   </Button>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
-                  Search returns curated papers with AI-powered analysis and mind map generation
+                  Search millions of open access research papers with AI analysis, mind maps, and PDF export
                 </p>
+                {totalResults > 0 && (
+                  <p className="text-sm text-blue-600 mt-1 font-medium">
+                    Found {totalResults.toLocaleString()} papers in Core database
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -258,39 +281,77 @@ const Index = () => {
                   <h3 className="text-2xl font-semibold text-gray-900 mb-4">Search Results</h3>
                   <div className="space-y-4">
                     {isLoading && !results.length ? (
-                      Array.from({ length: 2 }).map((_, i) => (
+                      Array.from({ length: 3 }).map((_, i) => (
                         <Card key={i} className="border-gray-200">
                           <CardContent className="p-6">
                             <Skeleton className="h-6 w-3/4 mb-3" />
                             <Skeleton className="h-4 w-full mb-2" />
                             <Skeleton className="h-4 w-5/6 mb-3" />
-                            <Skeleton className="h-8 w-32" />
+                            <div className="flex gap-2">
+                              <Skeleton className="h-8 w-24" />
+                              <Skeleton className="h-8 w-24" />
+                            </div>
                           </CardContent>
                         </Card>
                       ))
                     ) : (
                       results.map((paper) => (
                         <Card 
-                          key={paper.pmid} 
-                          className={`border-gray-200 cursor-pointer transition-all hover:shadow-md ${
-                            selectedPaper?.pmid === paper.pmid ? 'ring-2 ring-blue-500 border-blue-300' : ''
+                          key={paper.id} 
+                          className={`border-gray-200 transition-all hover:shadow-md ${
+                            selectedPaper?.id === paper.id ? 'ring-2 ring-blue-500 border-blue-300' : ''
                           }`}
-                          onClick={() => analyzeWithAI(paper)}
                         >
                           <CardContent className="p-6">
-                            <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
-                              {paper.title}
-                            </h4>
+                            <div className="flex justify-between items-start mb-3">
+                              <h4 className="font-semibold text-gray-900 line-clamp-2 flex-1">
+                                {paper.title}
+                              </h4>
+                              <Badge variant="secondary" className="ml-2">
+                                {paper.citations} citations
+                              </Badge>
+                            </div>
                             <p className="text-sm text-gray-600 mb-3">
-                              {paper.authors} • {paper.journal} ({paper.year})
+                              {paper.authors.slice(0, 3).join(', ')}
+                              {paper.authors.length > 3 && ` +${paper.authors.length - 3} more`}
+                            </p>
+                            <p className="text-sm text-blue-600 mb-3">
+                              {paper.journal} ({paper.year})
+                              {paper.doi && (
+                                <a 
+                                  href={`https://doi.org/${paper.doi}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className="ml-2 inline-flex items-center gap-1 hover:underline"
+                                >
+                                  DOI <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
                             </p>
                             <p className="text-sm text-gray-700 mb-4 line-clamp-3">
                               {paper.abstract}
                             </p>
-                            <Button size="sm" className="bg-teal-600 hover:bg-teal-700">
-                              <Lightbulb className="w-4 h-4 mr-2" />
-                              Analyze with AI
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button 
+                                size="sm" 
+                                className="bg-teal-600 hover:bg-teal-700"
+                                onClick={() => analyzeWithAI(paper)}
+                                disabled={isAnalyzing}
+                              >
+                                <Lightbulb className="w-4 h-4 mr-2" />
+                                {isAnalyzing && selectedPaper?.id === paper.id ? "Analyzing..." : "Analyze with AI"}
+                              </Button>
+                              {paper.pdf_url && (
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => downloadPaper(paper)}
+                                >
+                                  <BookOpen className="w-4 h-4 mr-2" />
+                                  Download PDF
+                                </Button>
+                              )}
+                            </div>
                           </CardContent>
                         </Card>
                       ))
@@ -300,65 +361,101 @@ const Index = () => {
 
                 {/* AI Analysis */}
                 <div>
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-4">AI Analysis</h3>
+                  <h3 className="text-2xl font-semibold text-gray-900 mb-4">AI Analysis & Mind Map</h3>
                   {selectedPaper && (
                     <Card className="border-teal-200 bg-teal-50/50">
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-teal-900">
                           <FileText className="w-5 h-5" />
-                          {selectedPaper.title}
+                          {selectedPaper.title.substring(0, 60)}...
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {isLoading && !aiAnalysis ? (
+                        {isAnalyzing ? (
                           <div className="space-y-4">
                             <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-5/6" />
                             <Skeleton className="h-4 w-4/5" />
                             <Skeleton className="h-20 w-full" />
                           </div>
-                        ) : aiAnalysis ? (
+                        ) : coreAnalysis ? (
                           <div className="space-y-6">
                             <div>
                               <h4 className="font-semibold text-gray-900 mb-2">AI Summary</h4>
                               <p className="text-gray-700 bg-white p-4 rounded-lg border">
-                                {aiAnalysis.summary}
+                                {coreAnalysis.summary}
                               </p>
                             </div>
                             
                             <div>
-                              <h4 className="font-semibold text-gray-900 mb-2">Generated Hypothesis</h4>
-                              <p className="text-gray-700 bg-blue-50 p-4 rounded-lg border border-blue-200">
-                                {aiAnalysis.hypothesis}
-                              </p>
-                            </div>
-
-                            <div>
                               <h4 className="font-semibold text-gray-900 mb-2">Key Findings</h4>
                               <ul className="space-y-2">
-                                {aiAnalysis.keyFindings.map((finding, index) => (
+                                {coreAnalysis.key_findings.map((finding, index) => (
                                   <li key={index} className="flex items-start gap-2">
                                     <div className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0" />
-                                    <span className="text-gray-700">{finding}</span>
+                                    <span className="text-gray-700 text-sm">{finding}</span>
                                   </li>
                                 ))}
                               </ul>
                             </div>
 
-                            <Button onClick={exportSummary} className="w-full bg-green-600 hover:bg-green-700">
-                              <Download className="w-4 h-4 mr-2" />
-                              Export Analysis
-                            </Button>
+                            <div>
+                              <h4 className="font-semibold text-gray-900 mb-2">Methodology</h4>
+                              <p className="text-gray-700 bg-blue-50 p-3 rounded-lg border border-blue-200 text-sm">
+                                {coreAnalysis.methodology}
+                              </p>
+                            </div>
+
+                            <div>
+                              <h4 className="font-semibold text-gray-900 mb-2">Conclusions</h4>
+                              <p className="text-gray-700 bg-green-50 p-3 rounded-lg border border-green-200 text-sm">
+                                {coreAnalysis.conclusions}
+                              </p>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <Button onClick={generateMindMap} className="flex-1 bg-purple-600 hover:bg-purple-700">
+                                <Brain className="w-4 h-4 mr-2" />
+                                Generate Mind Map
+                              </Button>
+                              <Button onClick={exportAnalysis} className="flex-1 bg-green-600 hover:bg-green-700">
+                                <Download className="w-4 h-4 mr-2" />
+                                Export PDF
+                              </Button>
+                            </div>
+
+                            <div className="text-center">
+                              <Badge variant="outline" className="bg-white">
+                                Confidence: {(coreAnalysis.confidence_score * 100).toFixed(1)}%
+                              </Badge>
+                            </div>
                           </div>
                         ) : (
                           <p className="text-gray-500 text-center py-8">
-                            Select a paper to analyze with AI
+                            Select a paper and click "Analyze with AI" to get comprehensive analysis
                           </p>
                         )}
                       </CardContent>
                     </Card>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Mind Map Section */}
+            {showMindMap && selectedPaper && coreAnalysis && (
+              <div className="mt-8">
+                <EnhancedMindMap 
+                  analysisData={{
+                    title: selectedPaper.title,
+                    summary: coreAnalysis.summary,
+                    key_findings: coreAnalysis.key_findings,
+                    methodology: coreAnalysis.methodology,
+                    conclusions: coreAnalysis.conclusions,
+                    research_gaps: coreAnalysis.research_gaps,
+                    future_directions: coreAnalysis.future_directions
+                  }}
+                />
               </div>
             )}
 
@@ -370,7 +467,7 @@ const Index = () => {
                   Search Scientific Literature
                 </h3>
                 <p className="text-gray-500 max-w-md mx-auto">
-                  Enter keywords to find relevant research papers and generate AI-powered insights with mind map visualizations.
+                  Enter keywords to search millions of research papers via Core API, analyze with AI, generate mind maps, and export comprehensive reports.
                 </p>
               </div>
             )}
@@ -379,12 +476,16 @@ const Index = () => {
           <TabsContent value="eliza">
             <ElizaPlugin />
           </TabsContent>
+
+          <TabsContent value="config">
+            <ApiConfig />
+          </TabsContent>
         </Tabs>
 
         {/* Footer Note */}
         <div className="mt-16 text-center">
           <p className="text-sm text-gray-500">
-            GeneLinker AI • Powered by OpenAI GPT-4 • Real-time research analysis • Built for Open Science
+            GeneLinker AI • Powered by Core API & OpenAI GPT-4 • Real-time research analysis • PDF export & download • Built for Open Science
           </p>
         </div>
       </div>
