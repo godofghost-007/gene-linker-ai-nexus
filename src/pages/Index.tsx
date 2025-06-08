@@ -165,11 +165,12 @@ const Index = () => {
                 <span className="text-white font-bold text-sm">G</span>
               </div>
               <h1 className="text-xl font-bold text-gray-900">GeneLinker</h1>
+              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">AI-Powered</span>
             </div>
             <nav className="hidden md:flex items-center space-x-6">
-              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Demo</a>
-              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">How it Works</a>
-              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">API</a>
+              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Research Tools</a>
+              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">AI Assistant</a>
+              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">API Docs</a>
               <Button variant="outline" size="sm">
                 <Github className="w-4 h-4 mr-2" />
                 GitHub
@@ -183,27 +184,37 @@ const Index = () => {
         {/* Hero Section */}
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            Your AI Copilot for Biomedical Research
+            AI-Powered Scientific Research Assistant
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Analyze scientific papers, discover hidden relationships, and accelerate breakthroughs with AI.
+            Analyze scientific papers, discover gene relationships, and accelerate research with GPT-4 powered insights and mind map visualizations.
           </p>
+          <div className="flex justify-center gap-4 text-sm text-gray-500">
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+              OpenAI GPT-4 Integration
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+              Real-time Literature Analysis
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+              Interactive Mind Maps
+            </span>
+          </div>
         </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="search" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Search className="w-4 h-4" />
-              Paper Search
+              Paper Search & Analysis
             </TabsTrigger>
             <TabsTrigger value="eliza" className="flex items-center gap-2">
               <Bot className="w-4 h-4" />
-              Eliza AI Assistant
-            </TabsTrigger>
-            <TabsTrigger value="config" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              Configuration
+              AI Research Assistant
             </TabsTrigger>
           </TabsList>
 
@@ -213,13 +224,13 @@ const Index = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-blue-900">
                   <Search className="w-5 h-5" />
-                  Search Scientific Papers
+                  Scientific Literature Search
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-4">
                   <Input
-                    placeholder="Enter biomedical terms (e.g., TP53 AND lung cancer)"
+                    placeholder="Enter biomedical terms (e.g., TP53 AND lung cancer, CRISPR gene editing)"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && searchPubMed()}
@@ -233,6 +244,9 @@ const Index = () => {
                     {isLoading ? "Searching..." : "Search PubMed"}
                   </Button>
                 </div>
+                <p className="text-sm text-gray-600 mt-2">
+                  Search returns curated papers with AI-powered analysis and mind map generation
+                </p>
               </CardContent>
             </Card>
 
@@ -353,10 +367,10 @@ const Index = () => {
               <div className="text-center py-12">
                 <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                  Search biomedical literature
+                  Search Scientific Literature
                 </h3>
                 <p className="text-gray-500 max-w-md mx-auto">
-                  Enter keywords like "TP53 AND lung cancer" to find relevant research papers and generate AI-powered insights.
+                  Enter keywords to find relevant research papers and generate AI-powered insights with mind map visualizations.
                 </p>
               </div>
             )}
@@ -365,16 +379,12 @@ const Index = () => {
           <TabsContent value="eliza">
             <ElizaPlugin />
           </TabsContent>
-
-          <TabsContent value="config">
-            <ApiConfig />
-          </TabsContent>
         </Tabs>
 
         {/* Footer Note */}
         <div className="mt-16 text-center">
           <p className="text-sm text-gray-500">
-            GeneLinker is in public beta • Open-source • API-first • Built with ❤️ for Open Science
+            GeneLinker AI • Powered by OpenAI GPT-4 • Real-time research analysis • Built for Open Science
           </p>
         </div>
       </div>
