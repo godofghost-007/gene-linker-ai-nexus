@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -165,7 +164,7 @@ const ElizaPlugin = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-purple-900">
             <MessageCircle className="w-5 h-5" />
-            AI Research Assistant (GPT-4 Powered)
+            AI Research Assistant
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -246,7 +245,7 @@ const ElizaPlugin = () => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-indigo-900">
             <Link className="w-5 h-5" />
-            Gene Literature Analysis (AI Enhanced)
+            Gene Literature Analysis
           </CardTitle>
         </CardHeader>
         <CardContent>

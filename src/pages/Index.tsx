@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,9 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, Download, Github, Lightbulb, FileText, Bot, Settings, ExternalLink, BookOpen, Brain } from "lucide-react";
+import { Search, Download, Github, Lightbulb, FileText, Bot, ExternalLink, BookOpen, Brain } from "lucide-react";
 import ElizaPlugin from "@/components/ElizaPlugin";
-import ApiConfig from "@/components/ApiConfig";
 import EnhancedMindMap from "@/components/EnhancedMindMap";
 import { searchCoreAPI, analyzePaperWithCore, downloadPaperPDF } from "@/utils/coreApiService";
 import { exportAnalysisToPDF } from "@/utils/pdfExport";
@@ -69,12 +69,12 @@ const Index = () => {
       
       toast({
         title: "Search completed",
-        description: `Found ${response.total_results} papers via Core API`,
+        description: `Found ${response.total_results} papers`,
       });
     } catch (error) {
       toast({
         title: "Search failed",
-        description: "Unable to fetch papers from Core API. Please try again.",
+        description: "Unable to fetch papers. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -174,11 +174,12 @@ const Index = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-teal-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">G</span>
-              </div>
+              <img 
+                src="/lovable-uploads/95eed986-cbe2-4cff-bcac-bfd6e297178e.png" 
+                alt="GeneLinker Logo" 
+                className="w-10 h-10"
+              />
               <h1 className="text-xl font-bold text-gray-900">GeneLinker</h1>
-              <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Core API Powered</span>
             </div>
             <nav className="hidden md:flex items-center space-x-6">
               <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Research Tools</a>
@@ -200,27 +201,13 @@ const Index = () => {
             AI-Powered Scientific Research Assistant
           </h2>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Search millions of research papers via Core API, analyze with GPT-4, generate interactive mind maps, and export comprehensive PDF reports.
+            Search and analyze scientific literature with advanced AI capabilities and interactive visualizations.
           </p>
-          <div className="flex justify-center gap-4 text-sm text-gray-500">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-              Core API Integration
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-              GPT-4 Analysis
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-              PDF Export & Download
-            </span>
-          </div>
         </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="search" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="search" className="flex items-center gap-2">
               <Search className="w-4 h-4" />
               Literature Search
@@ -228,10 +215,6 @@ const Index = () => {
             <TabsTrigger value="eliza" className="flex items-center gap-2">
               <Bot className="w-4 h-4" />
               AI Assistant
-            </TabsTrigger>
-            <TabsTrigger value="config" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              API Config
             </TabsTrigger>
           </TabsList>
 
@@ -241,7 +224,7 @@ const Index = () => {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-blue-900">
                   <Search className="w-5 h-5" />
-                  Scientific Literature Search (Core API)
+                  Scientific Literature Search
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -259,7 +242,7 @@ const Index = () => {
                     disabled={isLoading}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
-                    {isLoading ? "Searching..." : "Search Core API"}
+                    {isLoading ? "Searching..." : "Search"}
                   </Button>
                 </div>
                 <p className="text-sm text-gray-600 mt-2">
@@ -267,7 +250,7 @@ const Index = () => {
                 </p>
                 {totalResults > 0 && (
                   <p className="text-sm text-blue-600 mt-1 font-medium">
-                    Found {totalResults.toLocaleString()} papers in Core database
+                    Found {totalResults.toLocaleString()} papers
                   </p>
                 )}
               </CardContent>
@@ -467,7 +450,7 @@ const Index = () => {
                   Search Scientific Literature
                 </h3>
                 <p className="text-gray-500 max-w-md mx-auto">
-                  Enter keywords to search millions of research papers via Core API, analyze with AI, generate mind maps, and export comprehensive reports.
+                  Enter keywords to search millions of research papers, analyze with AI, generate mind maps, and export comprehensive reports.
                 </p>
               </div>
             )}
@@ -476,16 +459,12 @@ const Index = () => {
           <TabsContent value="eliza">
             <ElizaPlugin />
           </TabsContent>
-
-          <TabsContent value="config">
-            <ApiConfig />
-          </TabsContent>
         </Tabs>
 
         {/* Footer Note */}
         <div className="mt-16 text-center">
           <p className="text-sm text-gray-500">
-            GeneLinker AI • Powered by Core API & OpenAI GPT-4 • Real-time research analysis • PDF export & download • Built for Open Science
+            GeneLinker AI • Real-time research analysis • PDF export & download • Built for Open Science
           </p>
         </div>
       </div>
