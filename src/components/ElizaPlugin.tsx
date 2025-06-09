@@ -69,7 +69,7 @@ const ElizaPlugin = () => {
       
       toast({
         title: "AI Analysis completed",
-        description: `Response generated with ${Math.round(response.confidence * 100)}% confidence using GPT-4`,
+        description: `Response generated with ${Math.round(response.confidence * 100)}% confidence`,
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "AI analysis failed";
@@ -158,30 +158,30 @@ const ElizaPlugin = () => {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-12">
       {/* AI Research Q&A Section */}
-      <Card className="border-purple-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-purple-900">
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-gray-900 font-medium text-lg">
             <MessageCircle className="w-5 h-5" />
-            AI Research Assistant
+            Research Assistant
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex gap-4">
               <Input
                 placeholder="Ask about gene functions, molecular mechanisms, research methodologies..."
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !isAsking && askQuestion()}
-                className="flex-1"
+                className="flex-1 border-gray-200 focus:border-gray-400"
                 disabled={isAsking}
               />
               <Button 
                 onClick={askQuestion} 
                 disabled={isAsking || !question.trim()}
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-gray-900 hover:bg-gray-800 px-8"
               >
                 {isAsking ? (
                   <>
@@ -189,13 +189,13 @@ const ElizaPlugin = () => {
                     Analyzing...
                   </>
                 ) : (
-                  "Ask AI"
+                  "Ask"
                 )}
               </Button>
             </div>
 
             {askError && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between">
                   <span>{askError}</span>
@@ -215,23 +215,23 @@ const ElizaPlugin = () => {
             )}
 
             {askResponse && (
-              <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-semibold text-purple-900">AI Research Analysis</h4>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">
+              <div className="bg-gray-50/50 p-6 rounded-lg border-0">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-medium text-gray-900">Analysis</h4>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
                       {Math.round(askResponse.confidence * 100)}% confidence
                     </span>
-                    <Button size="sm" variant="outline" onClick={generateMindMap}>
-                      <Brain className="w-4 h-4 mr-1" />
+                    <Button size="sm" variant="outline" onClick={generateMindMap} className="border-gray-200">
+                      <Brain className="w-4 h-4 mr-2" />
                       Mind Map
                     </Button>
                   </div>
                 </div>
-                <p className="text-gray-700 mb-3 leading-relaxed">{askResponse.answer}</p>
+                <p className="text-gray-700 mb-4 leading-relaxed">{askResponse.answer}</p>
                 {askResponse.sources && (
-                  <div className="text-xs text-gray-600 border-t pt-3">
-                    <strong>Research Sources:</strong> {askResponse.sources.join(", ")}
+                  <div className="text-xs text-gray-600 border-t pt-4 border-gray-200">
+                    <strong>Sources:</strong> {askResponse.sources.join(", ")}
                   </div>
                 )}
               </div>
@@ -241,28 +241,28 @@ const ElizaPlugin = () => {
       </Card>
 
       {/* Gene Literature Linking Section */}
-      <Card className="border-indigo-200 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-indigo-900">
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-4">
+          <CardTitle className="flex items-center gap-3 text-gray-900 font-medium text-lg">
             <Link className="w-5 h-5" />
             Gene Literature Analysis
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex gap-4">
               <Input
                 placeholder="Enter gene symbol (e.g., TP53, BRCA1, MYC, EGFR)..."
                 value={geneId}
                 onChange={(e) => setGeneId(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !isLinking && linkGene()}
-                className="flex-1"
+                className="flex-1 border-gray-200 focus:border-gray-400"
                 disabled={isLinking}
               />
               <Button 
                 onClick={linkGene} 
                 disabled={isLinking || !geneId.trim()}
-                className="bg-indigo-600 hover:bg-indigo-700"
+                className="bg-gray-900 hover:bg-gray-800 px-8"
               >
                 {isLinking ? (
                   <>
@@ -270,13 +270,13 @@ const ElizaPlugin = () => {
                     Analyzing...
                   </>
                 ) : (
-                  "Analyze Gene"
+                  "Analyze"
                 )}
               </Button>
             </div>
 
             {linkError && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="border-red-200 bg-red-50">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription className="flex items-center justify-between">
                   <span>{linkError}</span>
@@ -296,28 +296,28 @@ const ElizaPlugin = () => {
             )}
 
             {linkResponse && (
-              <div className="space-y-4">
-                <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-200">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold text-indigo-900">
+              <div className="space-y-6">
+                <div className="bg-gray-50/50 p-6 rounded-lg border-0">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="font-medium text-gray-900">
                       Gene Summary: {linkResponse.gene_id}
                     </h4>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
                         {Math.round(linkResponse.confidence * 100)}% confidence
                       </span>
-                      <Button size="sm" variant="outline" onClick={generateMindMap}>
-                        <Brain className="w-4 h-4 mr-1" />
+                      <Button size="sm" variant="outline" onClick={generateMindMap} className="border-gray-200">
+                        <Brain className="w-4 h-4 mr-2" />
                         Mind Map
                       </Button>
                     </div>
                   </div>
-                  <p className="text-gray-700 mb-3 leading-relaxed">{linkResponse.summary}</p>
+                  <p className="text-gray-700 mb-4 leading-relaxed">{linkResponse.summary}</p>
                   <div className="flex flex-wrap gap-2">
                     {linkResponse.keywords.map((keyword, index) => (
                       <span 
                         key={index}
-                        className="text-xs bg-white text-indigo-600 px-2 py-1 rounded border"
+                        className="text-xs bg-white text-gray-600 px-3 py-1 rounded-full border border-gray-200"
                       >
                         {keyword}
                       </span>
@@ -326,21 +326,21 @@ const ElizaPlugin = () => {
                 </div>
 
                 <div>
-                  <h4 className="font-semibold text-gray-900 mb-3">Related Research Literature</h4>
-                  <div className="space-y-3">
+                  <h4 className="font-medium text-gray-900 mb-4">Related Research Literature</h4>
+                  <div className="space-y-4">
                     {linkResponse.papers.map((paper, index) => (
-                      <div key={index} className="flex items-start justify-between p-4 bg-white border rounded-lg hover:shadow-sm transition-shadow">
+                      <div key={index} className="flex items-start justify-between p-6 bg-white border-0 rounded-lg shadow-sm hover:shadow-md transition-shadow">
                         <div className="flex-1">
-                          <h5 className="text-gray-900 font-medium mb-2 leading-tight">{paper.title}</h5>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
+                          <h5 className="text-gray-900 font-medium mb-3 leading-relaxed">{paper.title}</h5>
+                          <div className="flex items-center gap-6 text-sm text-gray-600">
                             <span className="font-medium">{paper.journal}</span>
                             <span>{paper.year}</span>
-                            <span className="bg-green-100 text-green-700 px-2 py-1 rounded text-xs">
+                            <span className="bg-green-50 text-green-700 px-3 py-1 rounded-full text-xs">
                               {Math.round(paper.relevance_score * 100)}% relevant
                             </span>
                           </div>
                         </div>
-                        <Button variant="outline" size="sm" asChild className="ml-4">
+                        <Button variant="outline" size="sm" asChild className="ml-6 border-gray-200">
                           <a href={paper.url} target="_blank" rel="noopener noreferrer">
                             <ExternalLink className="w-4 h-4 mr-2" />
                             PubMed
@@ -358,7 +358,9 @@ const ElizaPlugin = () => {
 
       {/* Mind Map Visualization */}
       {showMindMap && (
-        <MindMap analysisData={generateMindMap()!} />
+        <div className="mt-12">
+          <MindMap analysisData={generateMindMap()!} />
+        </div>
       )}
     </div>
   );

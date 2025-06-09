@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -168,24 +167,24 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-teal-50">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-blue-100">
-        <div className="container mx-auto px-4 py-4">
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100">
+        <div className="container mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <img 
                 src="/lovable-uploads/95eed986-cbe2-4cff-bcac-bfd6e297178e.png" 
                 alt="GeneLinker Logo" 
-                className="w-10 h-10"
+                className="w-8 h-8"
               />
-              <h1 className="text-xl font-bold text-gray-900">GeneLinker</h1>
+              <h1 className="text-2xl font-light text-gray-900 tracking-tight">GeneLinker</h1>
             </div>
-            <nav className="hidden md:flex items-center space-x-6">
-              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">Research Tools</a>
-              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">AI Assistant</a>
-              <a href="#" className="text-gray-600 hover:text-blue-600 transition-colors">API Docs</a>
-              <Button variant="outline" size="sm">
+            <nav className="hidden md:flex items-center space-x-8">
+              <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium">Research</a>
+              <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium">Assistant</a>
+              <a href="#" className="text-gray-600 hover:text-gray-900 transition-colors text-sm font-medium">Documentation</a>
+              <Button variant="outline" size="sm" className="border-gray-200 hover:border-gray-300">
                 <Github className="w-4 h-4 mr-2" />
                 GitHub
               </Button>
@@ -194,25 +193,25 @@ const Index = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-6 py-12">
         {/* Hero Section */}
-        <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 mb-4">
-            AI-Powered Scientific Research Assistant
+        <div className="text-center mb-16">
+          <h2 className="text-5xl font-light text-gray-900 mb-6 tracking-tight">
+            Scientific Research Assistant
           </h2>
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
+          <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
             Search and analyze scientific literature with advanced AI capabilities and interactive visualizations.
           </p>
         </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="search" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
-            <TabsTrigger value="search" className="flex items-center gap-2">
+          <TabsList className="grid w-full grid-cols-2 mb-12 bg-gray-50 border border-gray-100">
+            <TabsTrigger value="search" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Search className="w-4 h-4" />
               Literature Search
             </TabsTrigger>
-            <TabsTrigger value="eliza" className="flex items-center gap-2">
+            <TabsTrigger value="eliza" className="flex items-center gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Bot className="w-4 h-4" />
               AI Assistant
             </TabsTrigger>
@@ -220,9 +219,9 @@ const Index = () => {
 
           <TabsContent value="search">
             {/* Search Section */}
-            <Card className="mb-8 border-blue-200 shadow-lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-blue-900">
+            <Card className="mb-12 border-0 shadow-sm bg-gray-50/50">
+              <CardHeader className="pb-4">
+                <CardTitle className="flex items-center gap-3 text-gray-900 font-medium text-lg">
                   <Search className="w-5 h-5" />
                   Scientific Literature Search
                 </CardTitle>
@@ -230,27 +229,24 @@ const Index = () => {
               <CardContent>
                 <div className="flex gap-4">
                   <Input
-                    placeholder="Enter research terms (e.g., CRISPR gene editing, machine learning cancer, COVID-19 vaccines)"
+                    placeholder="Enter research terms (e.g., CRISPR gene editing, machine learning cancer)"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && !isLoading && searchLiterature()}
-                    className="flex-1"
+                    className="flex-1 border-gray-200 focus:border-gray-400 bg-white"
                     disabled={isLoading}
                   />
                   <Button 
                     onClick={searchLiterature} 
                     disabled={isLoading}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-gray-900 hover:bg-gray-800 px-8"
                   >
                     {isLoading ? "Searching..." : "Search"}
                   </Button>
                 </div>
-                <p className="text-sm text-gray-600 mt-2">
-                  Search millions of open access research papers with AI analysis, mind maps, and PDF export
-                </p>
                 {totalResults > 0 && (
-                  <p className="text-sm text-blue-600 mt-1 font-medium">
-                    Found {totalResults.toLocaleString()} papers
+                  <p className="text-sm text-gray-600 mt-4 font-medium">
+                    {totalResults.toLocaleString()} papers found
                   </p>
                 )}
               </CardContent>
@@ -258,21 +254,21 @@ const Index = () => {
 
             {/* Results Section */}
             {(results.length > 0 || isLoading) && (
-              <div className="grid lg:grid-cols-2 gap-8">
+              <div className="grid lg:grid-cols-2 gap-12">
                 {/* Papers List */}
                 <div>
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-4">Search Results</h3>
-                  <div className="space-y-4">
+                  <h3 className="text-2xl font-light text-gray-900 mb-8">Search Results</h3>
+                  <div className="space-y-6">
                     {isLoading && !results.length ? (
                       Array.from({ length: 3 }).map((_, i) => (
-                        <Card key={i} className="border-gray-200">
-                          <CardContent className="p-6">
-                            <Skeleton className="h-6 w-3/4 mb-3" />
-                            <Skeleton className="h-4 w-full mb-2" />
-                            <Skeleton className="h-4 w-5/6 mb-3" />
-                            <div className="flex gap-2">
-                              <Skeleton className="h-8 w-24" />
-                              <Skeleton className="h-8 w-24" />
+                        <Card key={i} className="border-0 shadow-sm">
+                          <CardContent className="p-8">
+                            <Skeleton className="h-6 w-3/4 mb-4" />
+                            <Skeleton className="h-4 w-full mb-3" />
+                            <Skeleton className="h-4 w-5/6 mb-4" />
+                            <div className="flex gap-3">
+                              <Skeleton className="h-9 w-24" />
+                              <Skeleton className="h-9 w-24" />
                             </div>
                           </CardContent>
                         </Card>
@@ -281,57 +277,58 @@ const Index = () => {
                       results.map((paper) => (
                         <Card 
                           key={paper.id} 
-                          className={`border-gray-200 transition-all hover:shadow-md ${
-                            selectedPaper?.id === paper.id ? 'ring-2 ring-blue-500 border-blue-300' : ''
+                          className={`border-0 shadow-sm transition-all hover:shadow-md ${
+                            selectedPaper?.id === paper.id ? 'ring-1 ring-gray-300 shadow-md' : ''
                           }`}
                         >
-                          <CardContent className="p-6">
-                            <div className="flex justify-between items-start mb-3">
-                              <h4 className="font-semibold text-gray-900 line-clamp-2 flex-1">
+                          <CardContent className="p-8">
+                            <div className="flex justify-between items-start mb-4">
+                              <h4 className="font-medium text-gray-900 line-clamp-2 flex-1 text-lg leading-relaxed">
                                 {paper.title}
                               </h4>
-                              <Badge variant="secondary" className="ml-2">
-                                {paper.citations} citations
+                              <Badge variant="secondary" className="ml-4 bg-gray-100 text-gray-700">
+                                {paper.citations}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-600 mb-3">
+                            <p className="text-sm text-gray-600 mb-4 font-medium">
                               {paper.authors.slice(0, 3).join(', ')}
                               {paper.authors.length > 3 && ` +${paper.authors.length - 3} more`}
                             </p>
-                            <p className="text-sm text-blue-600 mb-3">
+                            <p className="text-sm text-gray-700 mb-4">
                               {paper.journal} ({paper.year})
                               {paper.doi && (
                                 <a 
                                   href={`https://doi.org/${paper.doi}`} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
-                                  className="ml-2 inline-flex items-center gap-1 hover:underline"
+                                  className="ml-3 inline-flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors"
                                 >
                                   DOI <ExternalLink className="w-3 h-3" />
                                 </a>
                               )}
                             </p>
-                            <p className="text-sm text-gray-700 mb-4 line-clamp-3">
+                            <p className="text-sm text-gray-600 mb-6 line-clamp-3 leading-relaxed">
                               {paper.abstract}
                             </p>
-                            <div className="flex gap-2">
+                            <div className="flex gap-3">
                               <Button 
                                 size="sm" 
-                                className="bg-teal-600 hover:bg-teal-700"
+                                className="bg-gray-900 hover:bg-gray-800"
                                 onClick={() => analyzeWithAI(paper)}
                                 disabled={isAnalyzing}
                               >
                                 <Lightbulb className="w-4 h-4 mr-2" />
-                                {isAnalyzing && selectedPaper?.id === paper.id ? "Analyzing..." : "Analyze with AI"}
+                                {isAnalyzing && selectedPaper?.id === paper.id ? "Analyzing..." : "Analyze"}
                               </Button>
                               {paper.pdf_url && (
                                 <Button 
                                   size="sm" 
                                   variant="outline"
                                   onClick={() => downloadPaper(paper)}
+                                  className="border-gray-200 hover:border-gray-300"
                                 >
                                   <BookOpen className="w-4 h-4 mr-2" />
-                                  Download PDF
+                                  Download
                                 </Button>
                               )}
                             </div>
@@ -344,13 +341,13 @@ const Index = () => {
 
                 {/* AI Analysis */}
                 <div>
-                  <h3 className="text-2xl font-semibold text-gray-900 mb-4">AI Analysis & Mind Map</h3>
+                  <h3 className="text-2xl font-light text-gray-900 mb-8">Analysis & Visualization</h3>
                   {selectedPaper && (
-                    <Card className="border-teal-200 bg-teal-50/50">
-                      <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-teal-900">
+                    <Card className="border-0 shadow-sm bg-gray-50/30">
+                      <CardHeader className="pb-4">
+                        <CardTitle className="flex items-center gap-3 text-gray-900 font-medium text-base">
                           <FileText className="w-5 h-5" />
-                          {selectedPaper.title.substring(0, 60)}...
+                          {selectedPaper.title.substring(0, 50)}...
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -359,64 +356,66 @@ const Index = () => {
                             <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-5/6" />
                             <Skeleton className="h-4 w-4/5" />
-                            <Skeleton className="h-20 w-full" />
+                            <Skeleton className="h-24 w-full" />
                           </div>
                         ) : coreAnalysis ? (
-                          <div className="space-y-6">
+                          <div className="space-y-8">
                             <div>
-                              <h4 className="font-semibold text-gray-900 mb-2">AI Summary</h4>
-                              <p className="text-gray-700 bg-white p-4 rounded-lg border">
+                              <h4 className="font-medium text-gray-900 mb-3">Summary</h4>
+                              <p className="text-gray-700 bg-white p-6 rounded-lg border-0 shadow-sm leading-relaxed">
                                 {coreAnalysis.summary}
                               </p>
                             </div>
                             
                             <div>
-                              <h4 className="font-semibold text-gray-900 mb-2">Key Findings</h4>
-                              <ul className="space-y-2">
+                              <h4 className="font-medium text-gray-900 mb-3">Key Findings</h4>
+                              <ul className="space-y-3">
                                 {coreAnalysis.key_findings.map((finding, index) => (
-                                  <li key={index} className="flex items-start gap-2">
-                                    <div className="w-2 h-2 bg-teal-500 rounded-full mt-2 flex-shrink-0" />
-                                    <span className="text-gray-700 text-sm">{finding}</span>
+                                  <li key={index} className="flex items-start gap-3">
+                                    <div className="w-1.5 h-1.5 bg-gray-400 rounded-full mt-2.5 flex-shrink-0" />
+                                    <span className="text-gray-700 text-sm leading-relaxed">{finding}</span>
                                   </li>
                                 ))}
                               </ul>
                             </div>
 
                             <div>
-                              <h4 className="font-semibold text-gray-900 mb-2">Methodology</h4>
-                              <p className="text-gray-700 bg-blue-50 p-3 rounded-lg border border-blue-200 text-sm">
+                              <h4 className="font-medium text-gray-900 mb-3">Methodology</h4>
+                              <p className="text-gray-700 bg-blue-50/50 p-4 rounded-lg border-0 text-sm leading-relaxed">
                                 {coreAnalysis.methodology}
                               </p>
                             </div>
 
                             <div>
-                              <h4 className="font-semibold text-gray-900 mb-2">Conclusions</h4>
-                              <p className="text-gray-700 bg-green-50 p-3 rounded-lg border border-green-200 text-sm">
+                              <h4 className="font-medium text-gray-900 mb-3">Conclusions</h4>
+                              <p className="text-gray-700 bg-green-50/50 p-4 rounded-lg border-0 text-sm leading-relaxed">
                                 {coreAnalysis.conclusions}
                               </p>
                             </div>
 
-                            <div className="flex gap-2">
-                              <Button onClick={generateMindMap} className="flex-1 bg-purple-600 hover:bg-purple-700">
+                            <div className="flex gap-3">
+                              <Button onClick={generateMindMap} className="flex-1 bg-gray-900 hover:bg-gray-800">
                                 <Brain className="w-4 h-4 mr-2" />
-                                Generate Mind Map
+                                Mind Map
                               </Button>
-                              <Button onClick={exportAnalysis} className="flex-1 bg-green-600 hover:bg-green-700">
+                              <Button onClick={exportAnalysis} className="flex-1 bg-gray-700 hover:bg-gray-600">
                                 <Download className="w-4 h-4 mr-2" />
-                                Export PDF
+                                Export
                               </Button>
                             </div>
 
                             <div className="text-center">
-                              <Badge variant="outline" className="bg-white">
+                              <Badge variant="outline" className="bg-white border-gray-200">
                                 Confidence: {(coreAnalysis.confidence_score * 100).toFixed(1)}%
                               </Badge>
                             </div>
                           </div>
                         ) : (
-                          <p className="text-gray-500 text-center py-8">
-                            Select a paper and click "Analyze with AI" to get comprehensive analysis
-                          </p>
+                          <div className="text-center py-12">
+                            <p className="text-gray-500 leading-relaxed">
+                              Select a paper and click "Analyze" to get comprehensive analysis
+                            </p>
+                          </div>
                         )}
                       </CardContent>
                     </Card>
@@ -427,7 +426,7 @@ const Index = () => {
 
             {/* Mind Map Section */}
             {showMindMap && selectedPaper && coreAnalysis && (
-              <div className="mt-8">
+              <div className="mt-12">
                 <EnhancedMindMap 
                   analysisData={{
                     title: selectedPaper.title,
@@ -444,13 +443,13 @@ const Index = () => {
 
             {/* Empty State */}
             {!isLoading && results.length === 0 && (
-              <div className="text-center py-12">
-                <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-gray-600 mb-2">
+              <div className="text-center py-20">
+                <Search className="w-12 h-12 text-gray-300 mx-auto mb-6" />
+                <h3 className="text-xl font-light text-gray-600 mb-3">
                   Search Scientific Literature
                 </h3>
-                <p className="text-gray-500 max-w-md mx-auto">
-                  Enter keywords to search millions of research papers, analyze with AI, generate mind maps, and export comprehensive reports.
+                <p className="text-gray-500 max-w-md mx-auto leading-relaxed">
+                  Enter keywords to search research papers and analyze with AI.
                 </p>
               </div>
             )}
@@ -461,10 +460,10 @@ const Index = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Footer Note */}
-        <div className="mt-16 text-center">
-          <p className="text-sm text-gray-500">
-            GeneLinker AI • Real-time research analysis • PDF export & download • Built for Open Science
+        {/* Footer */}
+        <div className="mt-20 text-center">
+          <p className="text-sm text-gray-400 font-light">
+            GeneLinker — Scientific Research Assistant
           </p>
         </div>
       </div>
