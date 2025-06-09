@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,9 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, Download, Github, Lightbulb, FileText, Bot, ExternalLink, BookOpen, Brain, Upload, File } from "lucide-react";
+import { Search, Download, Github, Lightbulb, FileText, Bot, ExternalLink, BookOpen, Brain, Upload, File, HelpCircle } from "lucide-react";
 import ElizaPlugin from "@/components/ElizaPlugin";
 import EnhancedMindMap from "@/components/EnhancedMindMap";
+import GuidedTour from "@/components/GuidedTour";
+import ChatAssistant from "@/components/ChatAssistant";
+import EnhancedUpload from "@/components/EnhancedUpload";
+import PersonaSwitcher from "@/components/PersonaSwitcher";
 import { searchCoreAPI, analyzePaperWithCore, downloadPaperPDF } from "@/utils/coreApiService";
 import { exportAnalysisToPDF } from "@/utils/pdfExport";
 
@@ -46,6 +49,10 @@ const Index = () => {
   const [showMindMap, setShowMindMap] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [isAnalyzingUpload, setIsAnalyzingUpload] = useState(false);
+  const [showTour, setShowTour] = useState(() => {
+    return !localStorage.getItem('tour-completed');
+  });
+  const [persona, setPersona] = useState<'researcher' | 'student'>('researcher');
   const { toast } = useToast();
 
   const searchLiterature = async () => {
@@ -227,23 +234,50 @@ const Index = () => {
     }
   };
 
+  const handleTourComplete = () => {
+    localStorage.setItem('tour-completed', 'true');
+    setShowTour(false);
+  };
+
+  const handlePersonaChange = (newPersona: 'researcher' | 'student') => {
+    setPersona(newPersona);
+    toast({
+      title: "Interface updated",
+      description: `Switched to ${newPersona} mode`,
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+      {/* Guided Tour */}
+      {showTour && <GuidedTour onComplete={handleTourComplete} />}
+      
+      {/* Chat Assistant */}
+      <ChatAssistant />
+
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100/50">
-        <div className="container mx-auto px-8 py-8">
+        <div className="container mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <img 
                 src="/lovable-uploads/95eed986-cbe2-4cff-bcac-bfd6e297178e.png" 
                 alt="GeneLinker Logo" 
-                className="w-10 h-10"
+                className="w-8 h-8"
               />
-              <h1 className="text-3xl font-extralight text-gray-900 tracking-wide">GeneLinker</h1>
+              <h1 className="text-2xl font-extralight text-gray-900 tracking-wide">GeneLinker</h1>
             </div>
-            <nav className="hidden md:flex items-center space-x-10">
-              <a href="#" className="text-gray-500 hover:text-gray-900 transition-colors text-sm font-light tracking-wide">Research</a>
-              <a href="#" className="text-gray-500 hover:text-gray-900 transition-colors text-sm font-light tracking-wide">Documentation</a>
+            <nav className="hidden md:flex items-center space-x-8">
+              <PersonaSwitcher onPersonaChange={handlePersonaChange} />
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowTour(true)}
+                className="text-gray-500 hover:text-gray-900"
+              >
+                <HelpCircle className="w-4 h-4 mr-2" />
+                Tutorial
+              </Button>
               <Button variant="outline" size="sm" className="border-gray-200 hover:border-gray-300 bg-white/50">
                 <Github className="w-4 h-4 mr-2" />
                 GitHub
@@ -253,25 +287,28 @@ const Index = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-8 py-16">
+      <div className="container mx-auto px-8 py-12">
         {/* Hero Section */}
-        <div className="text-center mb-20">
-          <h2 className="text-6xl font-extralight text-gray-900 mb-8 tracking-tight leading-tight">
-            Scientific Intelligence
+        <div className="text-center mb-16">
+          <h2 className="text-5xl font-extralight text-gray-900 mb-6 tracking-tight leading-tight">
+            Scientific Intelligence Platform
           </h2>
-          <p className="text-2xl text-gray-500 mb-16 max-w-3xl mx-auto font-light leading-relaxed">
-            Advanced AI-powered research analysis and literature discovery
+          <p className="text-xl text-gray-500 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+            {persona === 'researcher' 
+              ? "Advanced AI-powered research analysis and literature discovery for scientific professionals"
+              : "Simplified research exploration and learning tools for students and beginners"
+            }
           </p>
         </div>
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="search" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-16 bg-gray-50/50 border border-gray-100/50 backdrop-blur-sm">
+          <TabsList className="grid w-full grid-cols-2 mb-12 bg-gray-50/50 border border-gray-100/50 backdrop-blur-sm">
             <TabsTrigger value="search" className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
               <Search className="w-5 h-5" />
               Literature Discovery
             </TabsTrigger>
-            <TabsTrigger value="eliza" className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <TabsTrigger value="eliza" className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-sm" data-tour="ai-panel">
               <Bot className="w-5 h-5" />
               AI Intelligence
             </TabsTrigger>
@@ -279,19 +316,19 @@ const Index = () => {
 
           <TabsContent value="search">
             {/* Search & Upload Section */}
-            <div className="grid md:grid-cols-2 gap-8 mb-16">
-              <Card className="border-0 shadow-sm bg-white/70 backdrop-blur-sm">
-                <CardHeader className="pb-6">
-                  <CardTitle className="flex items-center gap-3 text-gray-900 font-light text-xl">
-                    <Search className="w-6 h-6" />
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
+              <Card className="border-0 shadow-sm bg-white/70 backdrop-blur-sm" data-tour="search">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3 text-gray-900 font-light text-lg">
+                    <Search className="w-5 h-5" />
                     Search Literature
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-6">
-                    <div className="flex gap-4">
+                  <div className="space-y-4">
+                    <div className="flex gap-3">
                       <Input
-                        placeholder="Enter research keywords..."
+                        placeholder={persona === 'researcher' ? "Enter research keywords, genes, pathways..." : "Search for topics you want to learn about..."}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && !isLoading && searchLiterature()}
@@ -301,7 +338,7 @@ const Index = () => {
                       <Button 
                         onClick={searchLiterature} 
                         disabled={isLoading}
-                        className="bg-gray-900 hover:bg-gray-800 px-8"
+                        className="bg-gray-900 hover:bg-gray-800 px-6"
                       >
                         {isLoading ? "Searching..." : "Search"}
                       </Button>
@@ -315,54 +352,16 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <Card className="border-0 shadow-sm bg-white/70 backdrop-blur-sm">
-                <CardHeader className="pb-6">
-                  <CardTitle className="flex items-center gap-3 text-gray-900 font-light text-xl">
-                    <Upload className="w-6 h-6" />
-                    Upload Paper
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="flex items-center gap-4">
-                      <label className="flex-1">
-                        <input
-                          type="file"
-                          accept=".pdf"
-                          onChange={handleFileUpload}
-                          className="hidden"
-                        />
-                        <div className="border-2 border-dashed border-gray-200 rounded-lg p-6 hover:border-gray-300 transition-colors cursor-pointer bg-gray-50/50">
-                          <div className="flex items-center justify-center gap-3 text-gray-500">
-                            <File className="w-6 h-6" />
-                            <span className="font-light">
-                              {uploadedFile ? uploadedFile.name : "Choose PDF file"}
-                            </span>
-                          </div>
-                        </div>
-                      </label>
-                    </div>
-                    {uploadedFile && (
-                      <Button 
-                        onClick={analyzeUploadedPaper}
-                        disabled={isAnalyzingUpload}
-                        className="w-full bg-gray-900 hover:bg-gray-800"
-                      >
-                        {isAnalyzingUpload ? "Analyzing..." : "Analyze Document"}
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <EnhancedUpload onAnalyze={analyzeUploadedPaper} />
             </div>
 
             {/* Results Section */}
             {(results.length > 0 || isLoading) && (
-              <div className="grid lg:grid-cols-2 gap-16">
+              <div className="grid lg:grid-cols-2 gap-12">
                 {/* Papers List */}
                 <div>
-                  <h3 className="text-3xl font-extralight text-gray-900 mb-12">Research Papers</h3>
-                  <div className="space-y-8">
+                  <h3 className="text-2xl font-extralight text-gray-900 mb-8">Research Papers</h3>
+                  <div className="space-y-6">
                     {isLoading && !results.length ? (
                       Array.from({ length: 3 }).map((_, i) => (
                         <Card key={i} className="border-0 shadow-sm bg-white/80">
@@ -445,12 +444,12 @@ const Index = () => {
 
                 {/* AI Analysis */}
                 <div>
-                  <h3 className="text-3xl font-extralight text-gray-900 mb-12">Intelligence Analysis</h3>
+                  <h3 className="text-2xl font-extralight text-gray-900 mb-8">Intelligence Analysis</h3>
                   {selectedPaper && (
                     <Card className="border-0 shadow-sm bg-white/80 backdrop-blur-sm">
-                      <CardHeader className="pb-6">
-                        <CardTitle className="flex items-center gap-3 text-gray-900 font-light text-lg">
-                          <FileText className="w-5 h-5" />
+                      <CardHeader className="pb-4">
+                        <CardTitle className="flex items-center gap-3 text-gray-900 font-light text-base">
+                          <FileText className="w-4 h-4" />
                           {selectedPaper.title.substring(0, 50)}...
                         </CardTitle>
                       </CardHeader>
@@ -463,7 +462,7 @@ const Index = () => {
                             <Skeleton className="h-32 w-full" />
                           </div>
                         ) : coreAnalysis ? (
-                          <div className="space-y-10">
+                          <div className="space-y-8">
                             <div>
                               <h4 className="font-light text-gray-900 mb-4">Summary</h4>
                               <p className="text-gray-700 bg-gray-50/50 p-8 rounded-xl border-0 leading-relaxed font-light">
@@ -497,10 +496,10 @@ const Index = () => {
                               </p>
                             </div>
 
-                            <div className="flex gap-4">
-                              <Button onClick={generateMindMap} className="flex-1 bg-gray-900 hover:bg-gray-800 font-light">
+                            <div className="flex gap-3">
+                              <Button onClick={generateMindMap} className="flex-1 bg-gray-900 hover:bg-gray-800 font-light" data-tour="analyze">
                                 <Brain className="w-4 h-4 mr-2" />
-                                Mind Map
+                                {persona === 'researcher' ? 'Mind Map' : 'Visual Summary'}
                               </Button>
                               <Button onClick={exportAnalysis} className="flex-1 bg-gray-700 hover:bg-gray-600 font-light">
                                 <Download className="w-4 h-4 mr-2" />
@@ -565,7 +564,7 @@ const Index = () => {
         </Tabs>
 
         {/* Footer */}
-        <div className="mt-32 text-center">
+        <div className="mt-24 text-center">
           <p className="text-sm text-gray-300 font-extralight tracking-wide">
             GeneLinker — Scientific Intelligence Platform
           </p>
