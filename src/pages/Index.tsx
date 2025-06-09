@@ -10,11 +10,13 @@ import { Search, Download, Github, Lightbulb, FileText, Bot, ExternalLink, BookO
 import ElizaPlugin from "@/components/ElizaPlugin";
 import EnhancedMindMap from "@/components/EnhancedMindMap";
 import GuidedTour from "@/components/GuidedTour";
-import ChatAssistant from "@/components/ChatAssistant";
+import EnhancedChatAssistant from "@/components/EnhancedChatAssistant";
 import EnhancedUpload from "@/components/EnhancedUpload";
 import PersonaSwitcher from "@/components/PersonaSwitcher";
+import Sidebar from "@/components/Sidebar";
 import { searchCoreAPI, analyzePaperWithCore, downloadPaperPDF } from "@/utils/coreApiService";
 import { exportAnalysisToPDF } from "@/utils/pdfExport";
+import { cn } from "@/lib/utils";
 
 interface CorePaper {
   id: string;
@@ -53,6 +55,17 @@ const Index = () => {
     return !localStorage.getItem('tour-completed');
   });
   const [persona, setPersona] = useState<'researcher' | 'student'>('researcher');
+  
+  // Sidebar state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [activeTab, setActiveTab] = useState('search');
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    const saved = localStorage.getItem('recent-searches');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [savedPapers, setSavedPapers] = useState(0);
+  const [chatFullScreen, setChatFullScreen] = useState(false);
+  
   const { toast } = useToast();
 
   // Generate 10 related research papers based on uploaded paper
@@ -102,6 +115,12 @@ const Index = () => {
     }));
   };
 
+  const addToRecentSearches = (term: string) => {
+    const updated = [term, ...recentSearches.filter(s => s !== term)].slice(0, 10);
+    setRecentSearches(updated);
+    localStorage.setItem('recent-searches', JSON.stringify(updated));
+  };
+
   const searchLiterature = async () => {
     if (!searchTerm.trim()) {
       toast({
@@ -117,6 +136,7 @@ const Index = () => {
     setCoreAnalysis(null);
     setSelectedPaper(null);
     setShowMindMap(false);
+    addToRecentSearches(searchTerm);
 
     try {
       const response = await searchCoreAPI(searchTerm, 10);
@@ -314,129 +334,57 @@ const Index = () => {
     });
   };
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-green-50/20 to-teal-50/30">
-      {/* Guided Tour */}
-      {showTour && <GuidedTour onComplete={handleTourComplete} />}
-      
-      {/* Chat Assistant */}
-      <ChatAssistant />
-
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-emerald-100/50 shadow-sm">
-        <div className="container mx-auto px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <img 
-                src="/lovable-uploads/95eed986-cbe2-4cff-bcac-bfd6e297178e.png" 
-                alt="GeneLinker Logo" 
-                className="w-8 h-8"
-              />
-              <h1 className="text-2xl font-extralight text-emerald-900 tracking-wide">GeneLinker</h1>
-            </div>
-            <nav className="hidden md:flex items-center space-x-8">
-              <PersonaSwitcher onPersonaChange={handlePersonaChange} />
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => setShowTour(true)}
-                className="text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50"
-              >
-                <HelpCircle className="w-4 h-4 mr-2" />
-                Tutorial
-              </Button>
-              <Button variant="outline" size="sm" className="border-emerald-200 hover:border-emerald-300 bg-white/50 text-emerald-700">
-                <Github className="w-4 h-4 mr-2" />
-                GitHub
-              </Button>
-            </nav>
-          </div>
-        </div>
-      </header>
-
-      <div className="container mx-auto px-8 py-12">
-        {/* Hero Section */}
-        <div className="text-center mb-16">
-          <h2 className="text-5xl font-extralight text-emerald-900 mb-6 tracking-tight leading-tight">
-            Scientific Intelligence Platform
-          </h2>
-          <p className="text-xl text-emerald-700/80 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
-            {persona === 'researcher' 
-              ? "Advanced AI-powered research analysis and literature discovery for scientific professionals"
-              : "Simplified research exploration and learning tools for students and beginners"
-            }
-          </p>
-        </div>
-
-        {/* Main Content Tabs */}
-        <Tabs defaultValue="search" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-12 bg-emerald-50/50 border border-emerald-100/50 backdrop-blur-sm">
-            <TabsTrigger value="search" className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-800">
-              <Search className="w-5 h-5" />
-              Scientific Literature Search
-            </TabsTrigger>
-            <TabsTrigger value="eliza" className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-800" data-tour="ai-panel">
-              <Bot className="w-5 h-5" />
-              AI Intelligence
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="search">
-            {/* Search & Upload Section */}
-            <div className="grid md:grid-cols-2 gap-8 mb-12">
-              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm" data-tour="search">
-                <CardHeader className="pb-6">
-                  <CardTitle className="flex items-center gap-3 text-emerald-900 font-light text-xl">
-                    <div className="p-2 bg-emerald-100 rounded-lg">
-                      <Search className="w-5 h-5 text-emerald-700" />
-                    </div>
-                    Literature Discovery
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-6">
-                    <div className="flex gap-3">
-                      <Input
-                        placeholder={persona === 'researcher' ? "Enter research keywords, genes, pathways..." : "Search for topics you want to learn about..."}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && !isLoading && searchLiterature()}
-                        className="flex-1 border-emerald-200 focus:border-emerald-400 bg-white/80"
-                        disabled={isLoading}
-                      />
-                      <Button 
-                        onClick={searchLiterature} 
-                        disabled={isLoading}
-                        className="bg-emerald-600 hover:bg-emerald-700 px-8 shadow-lg"
-                      >
-                        {isLoading ? "Searching..." : "Search"}
-                      </Button>
-                    </div>
-                    {totalResults > 0 && (
-                      <p className="text-sm text-emerald-600 font-light">
-                        {totalResults.toLocaleString()} papers discovered
-                      </p>
-                    )}
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'search':
+        return (
+          <div className="space-y-8">
+            {/* Search Section */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm" data-tour="search">
+              <CardHeader className="pb-6">
+                <CardTitle className="flex items-center gap-3 text-emerald-900 font-light text-xl">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <Search className="w-5 h-5 text-emerald-700" />
                   </div>
-                </CardContent>
-              </Card>
+                  Literature Discovery
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="flex gap-3">
+                    <Input
+                      placeholder={persona === 'researcher' ? "Enter research keywords, genes, pathways..." : "Search for topics you want to learn about..."}
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && !isLoading && searchLiterature()}
+                      className="flex-1 border-emerald-200 focus:border-emerald-400 bg-white/80"
+                      disabled={isLoading}
+                    />
+                    <Button 
+                      onClick={searchLiterature} 
+                      disabled={isLoading}
+                      className="bg-emerald-600 hover:bg-emerald-700 px-8 shadow-lg"
+                    >
+                      {isLoading ? "Searching..." : "Search"}
+                    </Button>
+                  </div>
+                  {totalResults > 0 && (
+                    <p className="text-sm text-emerald-600 font-light">
+                      {totalResults.toLocaleString()} papers discovered
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-              <EnhancedUpload 
-                onAnalyze={analyzeUploadedPaper}
-                onAnalysisComplete={handleUploadAnalysisComplete}
-              />
-            </div>
-
-            {/* Results Section */}
-            {(results.length > 0 || isLoading || isAnalyzingUpload) && (
+            {/* Results */}
+            {(results.length > 0 || isLoading) && (
               <div className="grid lg:grid-cols-2 gap-12">
                 {/* Papers List */}
                 <div>
-                  <h3 className="text-2xl font-extralight text-emerald-900 mb-8">
-                    {selectedPaper?.journal === 'Uploaded Document' ? 'Related Research Papers' : 'Research Papers'}
-                  </h3>
+                  <h3 className="text-2xl font-extralight text-emerald-900 mb-8">Research Papers</h3>
                   <div className="space-y-6">
-                    {(isLoading || isAnalyzingUpload) && !results.length ? (
+                    {isLoading && !results.length ? (
                       Array.from({ length: 3 }).map((_, i) => (
                         <Card key={i} className="border-0 shadow-sm bg-white/80">
                           <CardContent className="p-10">
@@ -528,7 +476,7 @@ const Index = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        {(isAnalyzing || isAnalyzingUpload) ? (
+                        {isAnalyzing ? (
                           <div className="space-y-6">
                             <Skeleton className="h-4 w-full" />
                             <Skeleton className="h-4 w-5/6" />
@@ -556,20 +504,6 @@ const Index = () => {
                               </ul>
                             </div>
 
-                            <div>
-                              <h4 className="font-light text-emerald-900 mb-4">Methodology</h4>
-                              <p className="text-gray-700 bg-blue-50/30 p-6 rounded-xl border-0 text-sm leading-relaxed font-light">
-                                {coreAnalysis.methodology}
-                              </p>
-                            </div>
-
-                            <div>
-                              <h4 className="font-light text-emerald-900 mb-4">Conclusions</h4>
-                              <p className="text-gray-700 bg-green-50/30 p-6 rounded-xl border-0 text-sm leading-relaxed font-light">
-                                {coreAnalysis.conclusions}
-                              </p>
-                            </div>
-
                             <div className="flex gap-3">
                               <Button onClick={generateMindMap} className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-light shadow-lg" data-tour="analyze">
                                 <Brain className="w-4 h-4 mr-2" />
@@ -590,7 +524,7 @@ const Index = () => {
                         ) : (
                           <div className="text-center py-16">
                             <p className="text-emerald-600/60 leading-relaxed font-light">
-                              Select a paper or upload a document to begin analysis
+                              Select a paper to begin analysis
                             </p>
                           </div>
                         )}
@@ -600,52 +534,202 @@ const Index = () => {
                 </div>
               </div>
             )}
+          </div>
+        );
 
-            {/* Mind Map Section */}
-            {showMindMap && selectedPaper && coreAnalysis && (
-              <div className="mt-20">
-                <EnhancedMindMap 
-                  analysisData={{
-                    title: selectedPaper.title,
-                    summary: coreAnalysis.summary,
-                    key_findings: coreAnalysis.key_findings,
-                    methodology: coreAnalysis.methodology,
-                    conclusions: coreAnalysis.conclusions,
-                    research_gaps: coreAnalysis.research_gaps,
-                    future_directions: coreAnalysis.future_directions
-                  }}
-                />
-              </div>
-            )}
+      case 'ai-assistant':
+        return (
+          <div className="h-full">
+            <EnhancedChatAssistant 
+              isFullScreen={true}
+              onToggleFullScreen={() => setChatFullScreen(!chatFullScreen)}
+            />
+          </div>
+        );
 
-            {/* Empty State */}
-            {!isLoading && !isAnalyzingUpload && results.length === 0 && !uploadedFile && (
-              <div className="text-center py-32">
-                <div className="p-6 bg-emerald-100 rounded-full w-24 h-24 mx-auto mb-8">
-                  <Search className="w-12 h-12 text-emerald-600 mx-auto" />
-                </div>
-                <h3 className="text-2xl font-extralight text-emerald-800 mb-4">
-                  Discover Scientific Literature
-                </h3>
-                <p className="text-emerald-600 max-w-lg mx-auto leading-relaxed font-light">
-                  Search research papers or upload your own documents for AI-powered analysis and literature discovery
+      case 'upload':
+        return (
+          <div className="max-w-2xl mx-auto">
+            <EnhancedUpload 
+              onAnalyze={analyzeUploadedPaper}
+              onAnalysisComplete={handleUploadAnalysisComplete}
+            />
+          </div>
+        );
+
+      case 'saved':
+        return (
+          <div className="text-center py-32">
+            <div className="p-6 bg-emerald-100 rounded-full w-24 h-24 mx-auto mb-8">
+              <BookOpen className="w-12 h-12 text-emerald-600 mx-auto" />
+            </div>
+            <h3 className="text-2xl font-extralight text-emerald-800 mb-4">
+              Saved Papers
+            </h3>
+            <p className="text-emerald-600 max-w-lg mx-auto leading-relaxed font-light">
+              Your bookmarked research papers will appear here
+            </p>
+          </div>
+        );
+
+      case 'history':
+        return (
+          <div className="max-w-2xl mx-auto">
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3 text-emerald-900 font-light text-xl">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <Search className="w-5 h-5 text-emerald-700" />
+                  </div>
+                  Search History
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {recentSearches.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentSearches.map((search, index) => (
+                      <div key={index} className="flex items-center justify-between p-4 bg-emerald-50/30 rounded-lg">
+                        <span className="text-emerald-800 font-light">{search}</span>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => {
+                            setSearchTerm(search);
+                            setActiveTab('search');
+                          }}
+                          className="border-emerald-200 hover:border-emerald-300"
+                        >
+                          Search Again
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-16">
+                    <p className="text-emerald-600/60 leading-relaxed font-light">
+                      No search history yet
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'mind-maps':
+        return (
+          <div className="text-center py-32">
+            <div className="p-6 bg-emerald-100 rounded-full w-24 h-24 mx-auto mb-8">
+              <Brain className="w-12 h-12 text-emerald-600 mx-auto" />
+            </div>
+            <h3 className="text-2xl font-extralight text-emerald-800 mb-4">
+              Mind Maps
+            </h3>
+            <p className="text-emerald-600 max-w-lg mx-auto leading-relaxed font-light">
+              Your generated mind maps and visualizations will appear here
+            </p>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-green-50/20 to-teal-50/30">
+      {/* Guided Tour */}
+      {showTour && <GuidedTour onComplete={handleTourComplete} />}
+      
+      {/* Sidebar */}
+      <Sidebar
+        isCollapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        recentSearches={recentSearches}
+        savedPapers={savedPapers}
+      />
+
+      {/* Main Content */}
+      <div className={cn(
+        "transition-all duration-300",
+        sidebarCollapsed ? "ml-16" : "ml-80"
+      )}>
+        {/* Header */}
+        <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-emerald-100/50 shadow-sm">
+          <div className="px-8 py-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-extralight text-emerald-900 tracking-wide">
+                  {activeTab === 'search' && 'Literature Search'}
+                  {activeTab === 'ai-assistant' && 'AI Research Assistant'}
+                  {activeTab === 'upload' && 'Upload Papers'}
+                  {activeTab === 'saved' && 'Saved Papers'}
+                  {activeTab === 'history' && 'Search History'}
+                  {activeTab === 'mind-maps' && 'Mind Maps'}
+                </h1>
+                <p className="text-emerald-600/80 font-light mt-1">
+                  {persona === 'researcher' 
+                    ? "Advanced research tools for scientific professionals"
+                    : "Simplified research exploration for students"
+                  }
                 </p>
               </div>
-            )}
-          </TabsContent>
+              <nav className="hidden md:flex items-center space-x-8">
+                <PersonaSwitcher onPersonaChange={handlePersonaChange} />
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setShowTour(true)}
+                  className="text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50"
+                >
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  Tutorial
+                </Button>
+                <Button variant="outline" size="sm" className="border-emerald-200 hover:border-emerald-300 bg-white/50 text-emerald-700">
+                  <Github className="w-4 h-4 mr-2" />
+                  GitHub
+                </Button>
+              </nav>
+            </div>
+          </div>
+        </header>
 
-          <TabsContent value="eliza">
-            <ElizaPlugin />
-          </TabsContent>
-        </Tabs>
+        {/* Content */}
+        <div className="p-8">
+          {renderTabContent()}
+
+          {/* Mind Map Section */}
+          {showMindMap && selectedPaper && coreAnalysis && activeTab === 'search' && (
+            <div className="mt-20">
+              <EnhancedMindMap 
+                analysisData={{
+                  title: selectedPaper.title,
+                  summary: coreAnalysis.summary,
+                  key_findings: coreAnalysis.key_findings,
+                  methodology: coreAnalysis.methodology,
+                  conclusions: coreAnalysis.conclusions,
+                  research_gaps: coreAnalysis.research_gaps,
+                  future_directions: coreAnalysis.future_directions
+                }}
+              />
+            </div>
+          )}
+        </div>
 
         {/* Footer */}
-        <div className="mt-24 text-center">
+        <div className="p-8 text-center">
           <p className="text-sm text-emerald-400 font-extralight tracking-wide">
             GeneLinker — Scientific Intelligence Platform
           </p>
         </div>
       </div>
+
+      {/* Floating Chat Assistant (when not in full screen mode) */}
+      {activeTab !== 'ai-assistant' && (
+        <EnhancedChatAssistant />
+      )}
     </div>
   );
 };
