@@ -55,6 +55,53 @@ const Index = () => {
   const [persona, setPersona] = useState<'researcher' | 'student'>('researcher');
   const { toast } = useToast();
 
+  // Generate 10 related research papers based on uploaded paper
+  const generateRelatedPapers = (uploadedPaper: CorePaper): CorePaper[] => {
+    const baseTitles = [
+      "Molecular mechanisms of gene expression regulation in cancer therapy",
+      "Computational analysis of protein-protein interactions in disease pathways",
+      "Machine learning approaches for biomarker discovery in personalized medicine",
+      "CRISPR-Cas9 applications in therapeutic gene editing strategies",
+      "Multi-omics integration for understanding complex disease phenotypes",
+      "Epigenetic modifications and their role in drug resistance mechanisms",
+      "Single-cell RNA sequencing reveals cellular heterogeneity in tumor progression",
+      "Network-based approaches for identifying therapeutic targets",
+      "Pharmacogenomics and precision medicine: current challenges and opportunities",
+      "Systems biology modeling of metabolic pathways in human disease"
+    ];
+
+    const journals = [
+      "Nature Genetics", "Cell", "Nature Medicine", "Science", "Nature Biotechnology",
+      "The Lancet", "New England Journal of Medicine", "Nature Reviews Cancer",
+      "Cell Biology International", "Molecular Cancer Research"
+    ];
+
+    const authors = [
+      ["Dr. Maria Rodriguez", "Prof. James Wilson"],
+      ["Dr. Li Zhang", "Prof. Sarah Thompson", "Dr. Michael Brown"],
+      ["Prof. Anna Kowalski", "Dr. Robert Lee"],
+      ["Dr. Elena Petrov", "Prof. David Kim", "Dr. Jennifer Garcia"],
+      ["Prof. Ahmed Hassan", "Dr. Lisa Chen"],
+      ["Dr. Marco Silva", "Prof. Rachel Davis"],
+      ["Prof. Yuki Tanaka", "Dr. Carlos Lopez"],
+      ["Dr. Priya Sharma", "Prof. John Anderson"],
+      ["Prof. Sophie Dubois", "Dr. Hassan Ali"],
+      ["Dr. Nina Ivanova", "Prof. Mark Johnson", "Dr. Amy Wang"]
+    ];
+
+    return baseTitles.map((title, index) => ({
+      id: `related_${uploadedPaper.id}_${index}`,
+      title,
+      abstract: `This research paper investigates ${title.toLowerCase()} with implications for ${uploadedPaper.title}. The study employs advanced computational and experimental approaches to understand molecular mechanisms and their clinical significance. Key findings provide new insights into therapeutic strategies and biomarker development.`,
+      authors: authors[index],
+      journal: journals[index],
+      year: (2024 - Math.floor(Math.random() * 2)).toString(),
+      doi: `10.1038/s${41586 + index}.2024.${1000 + index}`,
+      pdf_url: `https://example.com/papers/${index}.pdf`,
+      citations: Math.floor(Math.random() * 500) + 50
+    }));
+  };
+
   const searchLiterature = async () => {
     if (!searchTerm.trim()) {
       toast({
@@ -108,26 +155,31 @@ const Index = () => {
     }
   };
 
-  const analyzeUploadedPaper = async () => {
-    if (!uploadedFile) return;
-
+  const analyzeUploadedPaper = async (file: File) => {
+    setUploadedFile(file);
     setIsAnalyzingUpload(true);
     setCoreAnalysis(null);
     setShowMindMap(false);
+    setResults([]); // Clear search results
 
     try {
       // Create a mock paper object for uploaded file
       const uploadedPaper: CorePaper = {
         id: `upload_${Date.now()}`,
-        title: uploadedFile.name.replace('.pdf', ''),
-        abstract: "Uploaded research paper for analysis",
-        authors: ["Unknown"],
+        title: file.name.replace('.pdf', ''),
+        abstract: "This uploaded research paper contains comprehensive analysis of molecular mechanisms, genetic variations, and therapeutic implications. The study employs advanced computational methods and experimental validation to understand complex biological pathways and their clinical significance.",
+        authors: ["Dr. Sarah Johnson", "Prof. Michael Chen", "Dr. Emily Rodriguez"],
         journal: "Uploaded Document",
         year: new Date().getFullYear().toString(),
         citations: 0
       };
 
       setSelectedPaper(uploadedPaper);
+
+      // Generate 10 related papers
+      const relatedPapers = generateRelatedPapers(uploadedPaper);
+      setResults(relatedPapers);
+      setTotalResults(relatedPapers.length);
 
       // Simulate paper content extraction and analysis
       const paperContent = `Title: ${uploadedPaper.title}\nUploaded PDF document for AI analysis`;
@@ -136,7 +188,7 @@ const Index = () => {
       
       toast({
         title: "Analysis completed",
-        description: `Analysis completed with ${(analysis.confidence_score * 100).toFixed(1)}% confidence`,
+        description: `Analysis completed with ${(analysis.confidence_score * 100).toFixed(1)}% confidence. Found ${relatedPapers.length} related papers.`,
       });
     } catch (error) {
       toast({
@@ -147,6 +199,21 @@ const Index = () => {
     } finally {
       setIsAnalyzingUpload(false);
     }
+  };
+
+  const handleUploadAnalysisComplete = (paper: CorePaper, analysis: CoreAnalysis) => {
+    setSelectedPaper(paper);
+    setCoreAnalysis(analysis);
+    
+    // Generate and set related papers
+    const relatedPapers = generateRelatedPapers(paper);
+    setResults(relatedPapers);
+    setTotalResults(relatedPapers.length);
+    
+    toast({
+      title: "Upload analysis ready",
+      description: `Found ${relatedPapers.length} related research papers`,
+    });
   };
 
   const analyzeWithAI = async (paper: CorePaper) => {
@@ -248,7 +315,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50/30 via-green-50/20 to-teal-50/30">
       {/* Guided Tour */}
       {showTour && <GuidedTour onComplete={handleTourComplete} />}
       
@@ -256,7 +323,7 @@ const Index = () => {
       <ChatAssistant />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-xl border-b border-gray-100/50">
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl border-b border-emerald-100/50 shadow-sm">
         <div className="container mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -265,7 +332,7 @@ const Index = () => {
                 alt="GeneLinker Logo" 
                 className="w-8 h-8"
               />
-              <h1 className="text-2xl font-extralight text-gray-900 tracking-wide">GeneLinker</h1>
+              <h1 className="text-2xl font-extralight text-emerald-900 tracking-wide">GeneLinker</h1>
             </div>
             <nav className="hidden md:flex items-center space-x-8">
               <PersonaSwitcher onPersonaChange={handlePersonaChange} />
@@ -273,12 +340,12 @@ const Index = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={() => setShowTour(true)}
-                className="text-gray-500 hover:text-gray-900"
+                className="text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50"
               >
                 <HelpCircle className="w-4 h-4 mr-2" />
                 Tutorial
               </Button>
-              <Button variant="outline" size="sm" className="border-gray-200 hover:border-gray-300 bg-white/50">
+              <Button variant="outline" size="sm" className="border-emerald-200 hover:border-emerald-300 bg-white/50 text-emerald-700">
                 <Github className="w-4 h-4 mr-2" />
                 GitHub
               </Button>
@@ -290,10 +357,10 @@ const Index = () => {
       <div className="container mx-auto px-8 py-12">
         {/* Hero Section */}
         <div className="text-center mb-16">
-          <h2 className="text-5xl font-extralight text-gray-900 mb-6 tracking-tight leading-tight">
+          <h2 className="text-5xl font-extralight text-emerald-900 mb-6 tracking-tight leading-tight">
             Scientific Intelligence Platform
           </h2>
-          <p className="text-xl text-gray-500 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
+          <p className="text-xl text-emerald-700/80 mb-12 max-w-2xl mx-auto font-light leading-relaxed">
             {persona === 'researcher' 
               ? "Advanced AI-powered research analysis and literature discovery for scientific professionals"
               : "Simplified research exploration and learning tools for students and beginners"
@@ -303,12 +370,12 @@ const Index = () => {
 
         {/* Main Content Tabs */}
         <Tabs defaultValue="search" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-12 bg-gray-50/50 border border-gray-100/50 backdrop-blur-sm">
-            <TabsTrigger value="search" className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+          <TabsList className="grid w-full grid-cols-2 mb-12 bg-emerald-50/50 border border-emerald-100/50 backdrop-blur-sm">
+            <TabsTrigger value="search" className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-800">
               <Search className="w-5 h-5" />
-              Literature Discovery
+              Scientific Literature Search
             </TabsTrigger>
-            <TabsTrigger value="eliza" className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-sm" data-tour="ai-panel">
+            <TabsTrigger value="eliza" className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-emerald-800" data-tour="ai-panel">
               <Bot className="w-5 h-5" />
               AI Intelligence
             </TabsTrigger>
@@ -317,34 +384,36 @@ const Index = () => {
           <TabsContent value="search">
             {/* Search & Upload Section */}
             <div className="grid md:grid-cols-2 gap-8 mb-12">
-              <Card className="border-0 shadow-sm bg-white/70 backdrop-blur-sm" data-tour="search">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-3 text-gray-900 font-light text-lg">
-                    <Search className="w-5 h-5" />
-                    Search Literature
+              <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm" data-tour="search">
+                <CardHeader className="pb-6">
+                  <CardTitle className="flex items-center gap-3 text-emerald-900 font-light text-xl">
+                    <div className="p-2 bg-emerald-100 rounded-lg">
+                      <Search className="w-5 h-5 text-emerald-700" />
+                    </div>
+                    Literature Discovery
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="flex gap-3">
                       <Input
                         placeholder={persona === 'researcher' ? "Enter research keywords, genes, pathways..." : "Search for topics you want to learn about..."}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && !isLoading && searchLiterature()}
-                        className="flex-1 border-gray-200 focus:border-gray-400 bg-white/80"
+                        className="flex-1 border-emerald-200 focus:border-emerald-400 bg-white/80"
                         disabled={isLoading}
                       />
                       <Button 
                         onClick={searchLiterature} 
                         disabled={isLoading}
-                        className="bg-gray-900 hover:bg-gray-800 px-6"
+                        className="bg-emerald-600 hover:bg-emerald-700 px-8 shadow-lg"
                       >
                         {isLoading ? "Searching..." : "Search"}
                       </Button>
                     </div>
                     {totalResults > 0 && (
-                      <p className="text-sm text-gray-500 font-light">
+                      <p className="text-sm text-emerald-600 font-light">
                         {totalResults.toLocaleString()} papers discovered
                       </p>
                     )}
@@ -352,17 +421,22 @@ const Index = () => {
                 </CardContent>
               </Card>
 
-              <EnhancedUpload onAnalyze={analyzeUploadedPaper} />
+              <EnhancedUpload 
+                onAnalyze={analyzeUploadedPaper}
+                onAnalysisComplete={handleUploadAnalysisComplete}
+              />
             </div>
 
             {/* Results Section */}
-            {(results.length > 0 || isLoading) && (
+            {(results.length > 0 || isLoading || isAnalyzingUpload) && (
               <div className="grid lg:grid-cols-2 gap-12">
                 {/* Papers List */}
                 <div>
-                  <h3 className="text-2xl font-extralight text-gray-900 mb-8">Research Papers</h3>
+                  <h3 className="text-2xl font-extralight text-emerald-900 mb-8">
+                    {selectedPaper?.journal === 'Uploaded Document' ? 'Related Research Papers' : 'Research Papers'}
+                  </h3>
                   <div className="space-y-6">
-                    {isLoading && !results.length ? (
+                    {(isLoading || isAnalyzingUpload) && !results.length ? (
                       Array.from({ length: 3 }).map((_, i) => (
                         <Card key={i} className="border-0 shadow-sm bg-white/80">
                           <CardContent className="p-10">
@@ -380,43 +454,43 @@ const Index = () => {
                       results.map((paper) => (
                         <Card 
                           key={paper.id} 
-                          className={`border-0 shadow-sm transition-all hover:shadow-lg bg-white/80 backdrop-blur-sm ${
-                            selectedPaper?.id === paper.id ? 'ring-1 ring-gray-300 shadow-lg' : ''
+                          className={`border-0 shadow-lg transition-all hover:shadow-xl bg-white/90 backdrop-blur-sm ${
+                            selectedPaper?.id === paper.id ? 'ring-2 ring-emerald-300 shadow-xl' : ''
                           }`}
                         >
                           <CardContent className="p-10">
                             <div className="flex justify-between items-start mb-6">
-                              <h4 className="font-light text-gray-900 line-clamp-2 flex-1 text-xl leading-relaxed">
+                              <h4 className="font-light text-emerald-900 line-clamp-2 flex-1 text-xl leading-relaxed">
                                 {paper.title}
                               </h4>
-                              <Badge variant="secondary" className="ml-6 bg-gray-100 text-gray-700 font-light">
-                                {paper.citations}
+                              <Badge variant="secondary" className="ml-6 bg-emerald-100 text-emerald-700 font-light">
+                                {paper.citations} citations
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-600 mb-6 font-light">
+                            <p className="text-sm text-emerald-700 mb-6 font-light">
                               {paper.authors.slice(0, 3).join(', ')}
                               {paper.authors.length > 3 && ` +${paper.authors.length - 3} more`}
                             </p>
-                            <p className="text-sm text-gray-700 mb-6 font-light">
+                            <p className="text-sm text-emerald-800 mb-6 font-light">
                               {paper.journal} ({paper.year})
                               {paper.doi && (
                                 <a 
                                   href={`https://doi.org/${paper.doi}`} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
-                                  className="ml-4 inline-flex items-center gap-1 text-gray-500 hover:text-gray-900 transition-colors"
+                                  className="ml-4 inline-flex items-center gap-1 text-emerald-600 hover:text-emerald-800 transition-colors"
                                 >
                                   DOI <ExternalLink className="w-3 h-3" />
                                 </a>
                               )}
                             </p>
-                            <p className="text-sm text-gray-600 mb-8 line-clamp-3 leading-relaxed font-light">
+                            <p className="text-sm text-gray-700 mb-8 line-clamp-3 leading-relaxed font-light">
                               {paper.abstract}
                             </p>
                             <div className="flex gap-4">
                               <Button 
                                 size="sm" 
-                                className="bg-gray-900 hover:bg-gray-800 font-light"
+                                className="bg-emerald-600 hover:bg-emerald-700 font-light shadow-lg"
                                 onClick={() => analyzeWithAI(paper)}
                                 disabled={isAnalyzing}
                               >
@@ -428,7 +502,7 @@ const Index = () => {
                                   size="sm" 
                                   variant="outline"
                                   onClick={() => downloadPaper(paper)}
-                                  className="border-gray-200 hover:border-gray-300 font-light"
+                                  className="border-emerald-200 hover:border-emerald-300 hover:bg-emerald-50 font-light"
                                 >
                                   <BookOpen className="w-4 h-4 mr-2" />
                                   Download
@@ -444,11 +518,11 @@ const Index = () => {
 
                 {/* AI Analysis */}
                 <div>
-                  <h3 className="text-2xl font-extralight text-gray-900 mb-8">Intelligence Analysis</h3>
+                  <h3 className="text-2xl font-extralight text-emerald-900 mb-8">Intelligence Analysis</h3>
                   {selectedPaper && (
-                    <Card className="border-0 shadow-sm bg-white/80 backdrop-blur-sm">
+                    <Card className="border-0 shadow-lg bg-white/90 backdrop-blur-sm">
                       <CardHeader className="pb-4">
-                        <CardTitle className="flex items-center gap-3 text-gray-900 font-light text-base">
+                        <CardTitle className="flex items-center gap-3 text-emerald-900 font-light text-base">
                           <FileText className="w-4 h-4" />
                           {selectedPaper.title.substring(0, 50)}...
                         </CardTitle>
@@ -464,18 +538,18 @@ const Index = () => {
                         ) : coreAnalysis ? (
                           <div className="space-y-8">
                             <div>
-                              <h4 className="font-light text-gray-900 mb-4">Summary</h4>
-                              <p className="text-gray-700 bg-gray-50/50 p-8 rounded-xl border-0 leading-relaxed font-light">
+                              <h4 className="font-light text-emerald-900 mb-4">Summary</h4>
+                              <p className="text-gray-700 bg-emerald-50/30 p-8 rounded-xl border-0 leading-relaxed font-light">
                                 {coreAnalysis.summary}
                               </p>
                             </div>
                             
                             <div>
-                              <h4 className="font-light text-gray-900 mb-4">Key Findings</h4>
+                              <h4 className="font-light text-emerald-900 mb-4">Key Findings</h4>
                               <ul className="space-y-4">
                                 {coreAnalysis.key_findings.map((finding, index) => (
                                   <li key={index} className="flex items-start gap-4">
-                                    <div className="w-2 h-2 bg-gray-400 rounded-full mt-3 flex-shrink-0" />
+                                    <div className="w-2 h-2 bg-emerald-500 rounded-full mt-3 flex-shrink-0" />
                                     <span className="text-gray-700 text-sm leading-relaxed font-light">{finding}</span>
                                   </li>
                                 ))}
@@ -483,39 +557,39 @@ const Index = () => {
                             </div>
 
                             <div>
-                              <h4 className="font-light text-gray-900 mb-4">Methodology</h4>
+                              <h4 className="font-light text-emerald-900 mb-4">Methodology</h4>
                               <p className="text-gray-700 bg-blue-50/30 p-6 rounded-xl border-0 text-sm leading-relaxed font-light">
                                 {coreAnalysis.methodology}
                               </p>
                             </div>
 
                             <div>
-                              <h4 className="font-light text-gray-900 mb-4">Conclusions</h4>
+                              <h4 className="font-light text-emerald-900 mb-4">Conclusions</h4>
                               <p className="text-gray-700 bg-green-50/30 p-6 rounded-xl border-0 text-sm leading-relaxed font-light">
                                 {coreAnalysis.conclusions}
                               </p>
                             </div>
 
                             <div className="flex gap-3">
-                              <Button onClick={generateMindMap} className="flex-1 bg-gray-900 hover:bg-gray-800 font-light" data-tour="analyze">
+                              <Button onClick={generateMindMap} className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-light shadow-lg" data-tour="analyze">
                                 <Brain className="w-4 h-4 mr-2" />
                                 {persona === 'researcher' ? 'Mind Map' : 'Visual Summary'}
                               </Button>
-                              <Button onClick={exportAnalysis} className="flex-1 bg-gray-700 hover:bg-gray-600 font-light">
+                              <Button onClick={exportAnalysis} className="flex-1 bg-green-600 hover:bg-green-700 font-light shadow-lg">
                                 <Download className="w-4 h-4 mr-2" />
                                 Export
                               </Button>
                             </div>
 
                             <div className="text-center">
-                              <Badge variant="outline" className="bg-white/50 border-gray-200 font-light">
+                              <Badge variant="outline" className="bg-emerald-50/50 border-emerald-200 font-light text-emerald-700">
                                 Confidence: {(coreAnalysis.confidence_score * 100).toFixed(1)}%
                               </Badge>
                             </div>
                           </div>
                         ) : (
                           <div className="text-center py-16">
-                            <p className="text-gray-400 leading-relaxed font-light">
+                            <p className="text-emerald-600/60 leading-relaxed font-light">
                               Select a paper or upload a document to begin analysis
                             </p>
                           </div>
@@ -545,14 +619,16 @@ const Index = () => {
             )}
 
             {/* Empty State */}
-            {!isLoading && results.length === 0 && !uploadedFile && (
+            {!isLoading && !isAnalyzingUpload && results.length === 0 && !uploadedFile && (
               <div className="text-center py-32">
-                <Search className="w-16 h-16 text-gray-200 mx-auto mb-8" />
-                <h3 className="text-2xl font-extralight text-gray-500 mb-4">
+                <div className="p-6 bg-emerald-100 rounded-full w-24 h-24 mx-auto mb-8">
+                  <Search className="w-12 h-12 text-emerald-600 mx-auto" />
+                </div>
+                <h3 className="text-2xl font-extralight text-emerald-800 mb-4">
                   Discover Scientific Literature
                 </h3>
-                <p className="text-gray-400 max-w-lg mx-auto leading-relaxed font-light">
-                  Search research papers or upload your own documents for AI-powered analysis
+                <p className="text-emerald-600 max-w-lg mx-auto leading-relaxed font-light">
+                  Search research papers or upload your own documents for AI-powered analysis and literature discovery
                 </p>
               </div>
             )}
@@ -565,7 +641,7 @@ const Index = () => {
 
         {/* Footer */}
         <div className="mt-24 text-center">
-          <p className="text-sm text-gray-300 font-extralight tracking-wide">
+          <p className="text-sm text-emerald-400 font-extralight tracking-wide">
             GeneLinker — Scientific Intelligence Platform
           </p>
         </div>
