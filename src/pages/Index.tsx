@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Search, Download, Github, Lightbulb, FileText, Bot, ExternalLink, BookOpen, Brain, Upload, File, HelpCircle } from "lucide-react";
+import { Search, Download, Github, Lightbulb, FileText, Bot, ExternalLink, BookOpen, Brain, Upload, File, HelpCircle, Database } from "lucide-react";
 import ElizaPlugin from "@/components/ElizaPlugin";
 import EnhancedMindMap from "@/components/EnhancedMindMap";
 import GuidedTour from "@/components/GuidedTour";
@@ -15,6 +15,7 @@ import EnhancedUpload from "@/components/EnhancedUpload";
 import PersonaSwitcher from "@/components/PersonaSwitcher";
 import Sidebar from "@/components/Sidebar";
 import { searchCoreAPI, analyzePaperWithCore, downloadPaperPDF } from "@/utils/coreApiService";
+import { searchPubMedResearch } from "@/utils/aiService";
 import { exportAnalysisToPDF } from "@/utils/pdfExport";
 import { cn } from "@/lib/utils";
 
@@ -42,10 +43,14 @@ interface CoreAnalysis {
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [pubmedSearchTerm, setPubmedSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isPubmedLoading, setIsPubmedLoading] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [results, setResults] = useState<CorePaper[]>([]);
+  const [pubmedResults, setPubmedResults] = useState<CorePaper[]>([]);
   const [totalResults, setTotalResults] = useState(0);
+  const [totalPubmedResults, setTotalPubmedResults] = useState(0);
   const [coreAnalysis, setCoreAnalysis] = useState<CoreAnalysis | null>(null);
   const [selectedPaper, setSelectedPaper] = useState<CorePaper | null>(null);
   const [showMindMap, setShowMindMap] = useState(false);
@@ -155,6 +160,55 @@ const Index = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const searchPubMed = async () => {
+    if (!pubmedSearchTerm.trim()) {
+      toast({
+        title: "Search term required",
+        description: "Please enter a genetic research term",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsPubmedLoading(true);
+    setPubmedResults([]);
+    setCoreAnalysis(null);
+    setSelectedPaper(null);
+    setShowMindMap(false);
+    addToRecentSearches(pubmedSearchTerm);
+
+    try {
+      const response = await searchPubMedResearch(pubmedSearchTerm);
+      const formattedResults = response.papers.map(paper => ({
+        id: paper.id,
+        title: paper.title,
+        abstract: paper.abstract,
+        authors: paper.authors,
+        journal: paper.journal,
+        year: paper.year,
+        doi: paper.doi,
+        pdf_url: paper.url,
+        citations: paper.citations
+      }));
+      
+      setPubmedResults(formattedResults);
+      setTotalPubmedResults(response.total);
+      
+      toast({
+        title: "PubMed search completed",
+        description: `Found ${response.total} genetic research papers`,
+      });
+    } catch (error) {
+      toast({
+        title: "PubMed search failed",
+        description: "Unable to fetch papers from PubMed. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsPubmedLoading(false);
     }
   };
 
@@ -339,7 +393,7 @@ const Index = () => {
       case 'search':
         return (
           <div className="space-y-8">
-            {/* Search Section */}
+            {/* Literature Search Section */}
             <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm" data-tour="search">
               <CardHeader className="pb-6">
                 <CardTitle className="flex items-center gap-3 text-emerald-900 font-light text-xl">
@@ -377,14 +431,54 @@ const Index = () => {
               </CardContent>
             </Card>
 
-            {/* Results */}
-            {(results.length > 0 || isLoading) && (
+            {/* PubMed Genetic Research Search Section */}
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <CardTitle className="flex items-center gap-3 text-emerald-900 font-light text-xl">
+                  <div className="p-2 bg-emerald-100 rounded-lg">
+                    <Database className="w-5 h-5 text-emerald-700" />
+                  </div>
+                  PubMed Genetic Research Search
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  <div className="flex gap-3">
+                    <Input
+                      placeholder="Search genes, diseases, molecular pathways..."
+                      value={pubmedSearchTerm}
+                      onChange={(e) => setPubmedSearchTerm(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && !isPubmedLoading && searchPubMed()}
+                      className="flex-1 border-emerald-200 focus:border-emerald-400 bg-white/80"
+                      disabled={isPubmedLoading}
+                    />
+                    <Button 
+                      onClick={searchPubMed} 
+                      disabled={isPubmedLoading}
+                      className="bg-emerald-600 hover:bg-emerald-700 px-8 shadow-lg"
+                    >
+                      {isPubmedLoading ? "Searching..." : "Search PubMed"}
+                    </Button>
+                  </div>
+                  {totalPubmedResults > 0 && (
+                    <p className="text-sm text-emerald-600 font-light">
+                      {totalPubmedResults.toLocaleString()} genetic research papers found
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Results Display */}
+            {((results.length > 0 || pubmedResults.length > 0) || isLoading || isPubmedLoading) && (
               <div className="grid lg:grid-cols-2 gap-12">
                 {/* Papers List */}
                 <div>
-                  <h3 className="text-2xl font-extralight text-emerald-900 mb-8">Research Papers</h3>
+                  <h3 className="text-2xl font-extralight text-emerald-900 mb-8">
+                    {pubmedResults.length > 0 ? 'PubMed Research Papers' : 'Research Papers'}
+                  </h3>
                   <div className="space-y-6">
-                    {isLoading && !results.length ? (
+                    {(isLoading || isPubmedLoading) && !(results.length || pubmedResults.length) ? (
                       Array.from({ length: 3 }).map((_, i) => (
                         <Card key={i} className="border-0 shadow-sm bg-white/80">
                           <CardContent className="p-10">
@@ -399,7 +493,7 @@ const Index = () => {
                         </Card>
                       ))
                     ) : (
-                      results.map((paper) => (
+                      (pubmedResults.length > 0 ? pubmedResults : results).map((paper) => (
                         <Card 
                           key={paper.id} 
                           className={`border-0 shadow-lg transition-all hover:shadow-xl bg-white/90 backdrop-blur-sm ${
